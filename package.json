@@ -43,5 +43,8 @@
 		"typescript": "^3.6.4",
 		"vscode-test": "^1.2.2"
 	},
-	"dependencies": {}
+	"dependencies": {
+		"node-xml-stream": "^1.0.2",
+		"xml-stream": "^0.4.5"
+	}
 }
