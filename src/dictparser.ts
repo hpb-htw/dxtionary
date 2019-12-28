@@ -11,13 +11,10 @@ export async function parseDingDictionary(dingDictPath: string, insertEntry: (en
     let promisses = new Promise((resolve, reject) => {
         fs.createReadStream(dingDictPath, { flags: 'r' })
             .pipe(es.split())
-            .pipe(es.map(function (line: string, callback: any) {
-                if (line.startsWith("#")||line.trim().length === 0) {
-                    callback();
-                } else {
+            .pipe(es.mapSync(function (line: string) {
+                if (! line.startsWith("#") && line.trim().length > 0) {
                     lineNr++;
-                    insertEntry({ word: `word ${lineNr}`, text: `${line}` });
-                    callback(null, `${lineNr}\n`);
+                    insertEntry({ word: `${lineNr}`, text: `${line}` });
                 }
             })
                 .on('error', function (err) {
