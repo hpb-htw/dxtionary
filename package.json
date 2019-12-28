@@ -44,6 +44,8 @@
 		"vscode-test": "^1.2.2"
 	},
 	"dependencies": {
+		"@types/event-stream": "^3.3.34",
+		"event-stream": "^4.0.1",
 		"node-xml-stream": "^1.0.2",
 		"xml-stream": "^0.4.5"
 	}
