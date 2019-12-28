@@ -10,113 +10,54 @@ import { Entry } from "./dictionary";
  * Result of this function is a database file.
  * 
  */
-export function parseWikiDump(dumpFile:string, insertEntry: (entry:Entry) => void) {
+export async function parseWikiDump(dumpFile:string, insertEntry: (entry:Entry) => any) {
     let xmlFile = fs.createReadStream(dumpFile);
-    let xml = new XMLStream(xmlFile);
-    let entry:Entry = {
-        word: "word",
-        text: "TEXT"
-    };    
-    xml.preserve('text');    
-    
-    xml.on("endElement: page", (element:any) => {
-        let ns = element["ns"];
-        console.log({ns});
-        if (ns === '0') {
-            let title =  element["title"];
-            console.log("===========|"+title);            
-            let originText = element["revision"]["text"]["$children"];
-            try{
-                let text = joinText(originText);
-                //if (title === "ordo") {
-                    console.log( text );
-                //}
-            }catch(ex) {
-                console.log(ex);
+    let promisses = new Promise((resolve, reject) => {
+        let xml = new XMLStream(xmlFile);       
+        xml.preserve('text', true);
+        xml.on("endElement: page", (element:any) => {
+            let ns = element["ns"];           
+            if (ns === '0') {
+                let title =  element["title"];                           
+                let originText = element["revision"]["text"]["$children"];
+                try{
+                    let text = joinText(originText);             
+                    //console.log( text );
+                    insertEntry({
+                        word:title,
+                        text:text
+                    });
+                }catch(ex) {
+                    console.log(ex);
+                    reject(ex);
+                }
             }
-        }
-    });    
-    
+        });
+        xml.on("end", () => {
+            resolve("done");
+        });
+    });
+    return promisses;
 }
 
 
 
 function joinText(text:string[]):string {
-    let cleanup:string[] = [];
-    let xmlTag:string[] = [];
-    let onBuildXmlTag = false;
-    let inXMLElement = false;
-    let xmlElement:string[][] = [];
-    for(let line of text) {
-        let preProcess = line;
-        if (line === "<") {
-            onBuildXmlTag = true;
-        } else if (line === ">") {
-            onBuildXmlTag = false;
-            let currentXMLTag = xmlTag.join("") + line;
-            //console.log("currentXMLTag: " + currentXMLTag);
-            xmlTag = [];
-            if (isXMLOpenTag(currentXMLTag)) {
-                inXMLElement = true;
-                let currentElement = [currentXMLTag];
-                xmlElement.push(currentElement);                
-                continue;
-            } else if (isXMLCloseTag(currentXMLTag)) {
-                let currentElement = xmlElement.pop();                
-                currentElement!.push(currentXMLTag); // verdammt scheiße check
-                let elementText = currentElement!.join("");
-                inXMLElement = xmlElement.length > 0;
-                //console.log(`-----------> xmlElement.length ${xmlElement.length} ` + elementText);
-                //continue;
-                preProcess = elementText;
-            } else if(isXMLSimpleTag(currentXMLTag)){
-                //console.log(`-----------> single element  ` + currentXMLTag);
-                preProcess = currentXMLTag;
-                //continue;
-            } else {
-                //console.log("Cannot recognize tag " + currentXMLTag);
-                continue;
-            }
-        }
-
-        if (onBuildXmlTag) {
-           //xmlTag.push(line);
-            pushOrAppend(line, xmlTag);
-        } else if (inXMLElement) { // not by building a xml tag (open or close)
-            let topXMLElement = xmlElement[xmlElement.length - 1];
-            pushOrAppend(line, topXMLElement);
-        } else {
-            //cleanup.push(preProcess);
-            pushOrAppend(preProcess, cleanup);
-        }
-    }
-    return cleanup.join("\n");
+    return text.map((line)=>escape(line)).join("");
 }
 
-function isXMLOpenTag  (xmlTag:string) : boolean {
-    return xmlTag.search("</") === -1 && xmlTag.search("/>")===-1;
-}
-
-function isXMLCloseTag(xmlTag:string):boolean {
-    return xmlTag.startsWith("</");
-}
-
-function isXMLSimpleTag(xmlTag:string):boolean {
-    return xmlTag.endsWith("/>");
-}
-
-
-function pushOrAppend(line:string,target:string[]) {
-    if(line === "&") {
-        let lastElement = target[target.length-1];
-        lastElement += line;
-        target[target.length-1] = lastElement;        
-    }else if (line.startsWith("{{") || line.startsWith("==== {{")) {
-        console.log("-------> append extra newline" + "\n" + line );
-        target.push("\n");
-        target.push(line);
-        // console.log(target);
-    } else {
-        target.push(line);
-    }
-}
+// XML entities.
+var entities: {[index: string]:string} = {
+    '"': '&quot;',
+    '&': '&amp;',
+    '\'': '&apos;',
+    '<': '&lt;',
+    '>': '&gt;'
+  };
+  
+  // Escapes text for XML.
+  function escape(value:string) {
+    return value.replace(/"|&|'|<|>/g, function(entity) {
+      return entities[entity];
+    });
+  }
