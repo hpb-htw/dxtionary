@@ -8,10 +8,12 @@ const bigDumpXML =   "../../big-file/dewiktionary-20191020-pages-articles.xml";
 const smallDumpXML = "../../big-file/small-dewiktionary-20191020-pages-articles.xml";
 const nsZeroPageCountInSmallDumpXML = 6; 
 
-const halloPage = "../../big-file/hallo-page.xml";
-const lineOfHalloPage = 56;
-const firstHalloLine = '{{Siehe auch|[[hallo]], [[halló]]}}';
-const lastHalloLine = '{{Ähnlichkeiten 1|[[Hall]], [[Halle]], [[halle]], [[Halo]], [[holla]], [[Holle]]}}';
+const halloPageDict = {
+    path: "../../big-file/hallo-page.xml",
+    lineOfPage: 56,
+    firstLine: '{{Siehe auch|[[hallo]], [[halló]]}}',
+    lastLine: '{{Ähnlichkeiten 1|[[Hall]], [[Halle]], [[halle]], [[Halo]], [[holla]], [[Holle]]}}'
+};
 
 const dingDeEnDict = {
     path: "../../big-file/ding-de-en-dev.txt",
@@ -33,18 +35,18 @@ suite('wikipedia', () => {
 
 
     test ('parse page correct', async () => {
-        let xmlPath = path.join(__dirname, halloPage);
+        let xmlPath = path.join(__dirname, halloPageDict.path);
         let result: Entry[] = [];
         await parseWikiDump(xmlPath,  (entry) => {
             result.push(entry);
         });
-        // console.log(result);
-        let hallo = result.filter((page)=> page.word==="Hallo");
+        //console.log(result);
+        let hallo = result.filter((page)=> page.id===555);
         assert.equal(hallo.length, 1, "there is only one page with tile Hallo");
         let text = hallo[0].text.split("\n");
-        assert.equal(text.length, lineOfHalloPage);
-        assert.equal(text[0], firstHalloLine);
-        assert.equal(text[lineOfHalloPage-1], lastHalloLine);
+        assert.equal(text.length, halloPageDict.lineOfPage);
+        assert.equal(text[0], halloPageDict.firstLine);
+        assert.equal(text[halloPageDict.lineOfPage-1], halloPageDict.lastLine);
     });
 });
 

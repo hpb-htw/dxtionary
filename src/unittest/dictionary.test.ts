@@ -3,8 +3,8 @@ import {DeWiktionary, Entry} from "../dictionary";
 
 test('query a word', ()=>{
     let dict = new DeWiktionary("somepath");
-    let word = "test";
+    let word = 1001;
     let result = dict.query("test");
     console.log(result);
-    assert.equal(result.word, word);
+    assert.equal(result.id, word);
 });

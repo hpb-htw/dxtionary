@@ -1,5 +1,11 @@
 export type Entry = {
-    word: string,
+    /**
+     * unique id of the entry in a dictionary
+     */
+    id: number,
+    /**
+     * text description about the entry
+     */
     text: string
 };
 
@@ -30,7 +36,7 @@ export class DeWiktionary implements Dictionary {
 
     query(word: string): Entry {
         return {
-            word : word,
+            id : 1001,
             text : "TODO"
         };
     }

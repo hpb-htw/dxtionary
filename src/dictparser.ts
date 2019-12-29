@@ -6,6 +6,11 @@ import * as es from "event-stream";
 
 import { Entry } from "./dictionary";
 
+/**
+ * 
+ * @param dingDictPath path to ding dictionary file, can be downloaded from ....
+ * @param insertEntry a callback function which can process a line in the ding dictionary file.
+ */
 export async function parseDingDictionary(dingDictPath: string, insertEntry: (entry: Entry) => any): Promise<any> {
     let lineNr = 0;    
     let promisses = new Promise((resolve, reject) => {
@@ -14,7 +19,7 @@ export async function parseDingDictionary(dingDictPath: string, insertEntry: (en
             .pipe(es.mapSync(function (line: string) {
                 if (! line.startsWith("#") && line.trim().length > 0) {
                     lineNr++;
-                    insertEntry({ word: `${lineNr}`, text: `${line}` });
+                    insertEntry({ id: lineNr, text: `${line}` });
                 }
             })
                 .on('error', function (err) {
@@ -41,13 +46,13 @@ export async function parseWikiDump(dumpFile: string, insertEntry: (entry: Entry
         xml.on("endElement: page", (element: any) => {
             let ns = element["ns"];
             if (ns === '0') {
-                let title = element["title"];
+                let title = Number.parseInt(element["id"]);
                 let originText = element["revision"]["text"]["$children"];
                 try {
                     let text = joinText(originText);
                     //console.log( text );
                     insertEntry({
-                        word: title,
+                        id: title,
                         text: text
                     });
                 } catch (ex) {
