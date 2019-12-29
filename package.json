@@ -4,6 +4,10 @@
 	"displayName": "dxtionary",
 	"description": "",
 	"version": "0.0.1",
+	"repository": {
+		"type": "git",
+		"url": "git://notset.host/path"
+	},
 	"engines": {
 		"vscode": "^1.41.0"
 	},
@@ -29,7 +33,7 @@
 		"watch": "tsc -watch -p ./",
 		"pretest": "npm run compile",
 		"vstest": "node ./out/test/runTest.js",
-		"test": "mocha --ui tdd --require ts-node/register --watch-extensions ts,tsx \"./src/unittest/**/*.{ts,tsx}\""
+		"test": "node --trace-uncaught ./node_modules/.bin/mocha --ui tdd --require ts-node/register --watch-extensions ts,tsx \"./src/unittest/**/*.{ts,tsx}\""
 	},
 	"devDependencies": {
 		"@types/glob": "^7.1.1",
@@ -45,8 +49,13 @@
 	},
 	"dependencies": {
 		"@types/event-stream": "^3.3.34",
+		"@types/generic-pool": "^3.1.9",
+		"@types/sql.js": "^1.0.2",
 		"event-stream": "^4.0.1",
 		"node-xml-stream": "^1.0.2",
+		"sql.js": "^1.0.1",
+		"trilogy": "^2.0.2",
 		"xml-stream": "^0.4.5"
-	}
+	},
+	"license": "MIT"
 }

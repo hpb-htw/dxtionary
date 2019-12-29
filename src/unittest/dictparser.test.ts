@@ -4,6 +4,7 @@ import * as path from "path";
 import {parseWikiDump, parseDingDictionary} from "../dictparser";
 import {Entry} from "../dictionary";
 
+
 const bigDumpXML =   "../../big-file/dewiktionary-20191020-pages-articles.xml";
 const smallDumpXML = "../../big-file/small-dewiktionary-20191020-pages-articles.xml";
 const nsZeroPageCountInSmallDumpXML = 6; 
@@ -16,10 +17,10 @@ const halloPageDict = {
 };
 
 const dingDeEnDict = {
-    path: "../../big-file/ding-de-en-dev.txt",
+    path: "../../big-file/small-ding-de-en.txt",
     firstLine: "A {n}; Ais {n}; As {n}; Aisis {n}; Ases {n} [mus.] | A-Dur {n} :: A; A sharp; A flat; A double sharp; A double flat | A major",
     lastLine: "Zylofuramin {n} [biochem.] :: zylofuramine",
-    line: 204847
+    line: 4
 };
 
 suite('wikipedia', () => {
@@ -55,9 +56,17 @@ suite('ding', () =>{
     test('parse ding file', async () => {
         let dingFile = path.join(__dirname, dingDeEnDict.path);
         let result:Entry[] = [];
-        await parseDingDictionary(dingFile, (entry) => {
-            result.push(entry);
-        });        
+        let asyncFn = async function (entry:Entry) {
+            let p = new Promise( (resolve, reject) => {
+                setTimeout(() => {
+                    console.log(entry);
+                    result.push(entry);
+                    resolve(entry);
+                }, 200);
+            });
+            await p;
+        };
+        await parseDingDictionary(dingFile, asyncFn);        
         assert.equal(result.length, dingDeEnDict.line);
         assert.equal(result[0].text ,dingDeEnDict.firstLine);
         assert.equal(result[dingDeEnDict.line-1].text, dingDeEnDict.lastLine);

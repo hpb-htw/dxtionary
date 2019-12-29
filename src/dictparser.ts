@@ -16,19 +16,20 @@ export async function parseDingDictionary(dingDictPath: string, insertEntry: (en
     let promisses = new Promise((resolve, reject) => {
         fs.createReadStream(dingDictPath, { flags: 'r' })
             .pipe(es.split())
-            .pipe(es.mapSync(function (line: string) {
+            .pipe(es.map(async function (line: string, callback:any ) {
                 if (! line.startsWith("#") && line.trim().length > 0) {
                     lineNr++;
-                    insertEntry({ id: lineNr, text: `${line}` });
+                    await insertEntry({ id: lineNr, text: `${line}` });
                 }
+                callback(null, line + "\n");
+            }))
+            //.pipe(process.stdout)
+            .on('error', function (err) {
+                reject(err);
             })
-                .on('error', function (err) {
-                    reject(err);
-                })
-                .on('end', function () {
-                    resolve(lineNr);
-                })
-            );
+            .on('end', function () {
+                resolve(lineNr);
+            });
     });
     return promisses;
 }
