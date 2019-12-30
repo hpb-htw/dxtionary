@@ -1,7 +1,7 @@
 import * as assert from "assert";
 import * as fs from "fs";
 
-import {SqlJsDictionary, Entry} from "../dictionary";
+import {Entry, NeDBDictionary} from "../dictionary";
 
 const globalDbPath = "/tmp/somepath.db";
 const entries: Entry[] = [
@@ -12,8 +12,17 @@ const entries: Entry[] = [
 const TEN_SECONDS = 10*1000; // as "macro" to easy reading
 
 
-suite('SqlJsDictionary', () => {
+function getNonce() {
+	let text = '';
+	const possible = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+	for (let i = 0; i < 32; i++) {
+		text += possible.charAt(Math.floor(Math.random() * possible.length));
+	}
+	return text;
+}
 
+
+suite('NeDBDictionary', ()=> {
     setup( ()=> {
         try{
             fs.unlinkSync(globalDbPath);
@@ -23,7 +32,7 @@ suite('SqlJsDictionary', () => {
     });
 
     test('query a word', async ()=>{
-        let dict = new SqlJsDictionary(globalDbPath);
+        let dict = new NeDBDictionary(globalDbPath);
         await dict.saveAll(entries);
         let word = "TeSt"; // keep this word mix lower and UPPER case to test query
         let result = await dict.query(word);
@@ -33,23 +42,22 @@ suite('SqlJsDictionary', () => {
     });
 
     test('persistent entries',async () => {
-        let dict = new SqlJsDictionary(globalDbPath);
+        let dict = new NeDBDictionary(globalDbPath);
         let count = await dict.saveAll(entries);
         await dict.close();
         assert.equal(count, entries.length);
         // now open again, dictionary must contain entries
-        let reopenDict = new SqlJsDictionary(globalDbPath);
+        let reopenDict = new NeDBDictionary(globalDbPath);
         let helloEntry = await reopenDict.query('hello');
         assert.equal(helloEntry, "hello\nhello");
         let testEntry = await reopenDict.query('test');
         assert.equal(testEntry, "test\ntest");
     });
 
-
-    test.only('persistent single entry',async () => {        
-        let dict = new SqlJsDictionary(globalDbPath);
+    test('persistent single entry',async () => {        
+        let dict = new NeDBDictionary(globalDbPath);
         let bigEntries:Entry[] = [];
-        for (let i=0; i < 10_000; ++i) {
+        for (let i=0; i < 100_000; ++i) {
             bigEntries.push({
                 id: i,
                 text: `${i}-${getNonce()}`
@@ -57,20 +65,12 @@ suite('SqlJsDictionary', () => {
         }
         for (let entry of bigEntries) {
             await dict.save(entry).then((result)=>{
-                console.log(`${result?.id}`);
+                //console.log(`${result?.id}`);
             });
         }
         let ok = await dict.close();
         assert.ok(ok);
-    }).timeout(TEN_SECONDS*8);
-
+    })
+    .timeout(TEN_SECONDS*8)
+    ;
 });
-
-function getNonce() {
-	let text = '';
-	const possible = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
-	for (let i = 0; i < 32; i++) {
-		text += possible.charAt(Math.floor(Math.random() * possible.length));
-	}
-	return text;
-}

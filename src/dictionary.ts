@@ -1,4 +1,5 @@
 import { connect, Trilogy } from 'trilogy';
+const Datastore = require('nedb');
 
 export type Entry = {
     /**
@@ -16,8 +17,8 @@ export const DbEntrySchema = {
     text: String
 };
 
-export const idMap = (word: string, entries:Entry[]) => 
-            `${word}\n${entries.map(e=>e.text).join('\n')}`;
+export const idMap = (word: string, entries: Entry[]) =>
+    `${word}\n${entries.map(e => e.text).join('\n')}`;
 
 export interface Dictionary {
     /**
@@ -33,7 +34,7 @@ export interface Dictionary {
      */
     save(entry: Entry): Promise<any>;
 
-    saveAll(entries: Entry[]): Promise<any>;
+    saveAll(entries: Entry[]): Promise<number>;
     /**
      * clients of a dictionary must call this method when they don't need this dictionary any more.
      * Clients expect that this method release all resource which are bound to this dictionary.
@@ -41,60 +42,67 @@ export interface Dictionary {
      * @returns a Promiss, expected to be resolved if sussess, or rejected of closing dictionary 
      * causes problems.
      */
-    close():Promise<any>;
+    close(): Promise<any>;
 }
 
 
-export class SqlJsDictionary implements Dictionary {
+export class NeDBDictionary implements Dictionary {
 
-    private globalDb: Trilogy;
+    db: any;
     
-    readonly tableName = "dict";
+    /** function to rendern an array of Entry */    
+    readonly entitiesMap:(word: string, entities: Entry[]) => string
+        = idMap;
 
+    constructor(dbPath:string) {
+        this.db = new Datastore( {filename:dbPath, autoload:true} );
+    }
+
+    query(word: string): Promise<string> {
+        let reg = new RegExp(word, 'i');
+        return new Promise((resolve, reject)=> {
+            this.db.find({text: {$regex: reg }}, (err:any, doc:any)=> {
+                if (err) {
+                    reject(err);
+                }else {
+                    resolve(this.entitiesMap(word, doc));
+                }
+            });
+        });
+    } 
     
-
-    /** function to rendern an array of Entry */
-    entitiesMap: (word:string, entities: Entry[]) => string;
-
-    /**
-     * 
-     * @param dictionaryDatabasePath path to a Ding file database, which is used as global 
-     *          (original from somewhere in internet; contains well-known entry)     
-    */
-    constructor(dictionaryDatabasePath: string) {        
-        this.globalDb = connect(dictionaryDatabasePath, {
-            client: 'sql.js'
-        });
-        this.entitiesMap = idMap;
-    }
-
-    async query(word: string): Promise<string> {
-        const globalDict = await this.globalDb.model<Entry>(this.tableName, DbEntrySchema);
-        let result = await globalDict.find(["text", "like", `%${word}%`]);        
-        return this.entitiesMap(word, result);
-    }
-
-    async save(entry: Entry) {        
-        const globalDict = await this.globalDb.model<Entry>(this.tableName, DbEntrySchema);        
-        return await globalDict.create(entry);
-    }
-
-    async saveAll(entries: Entry[]){
-        const globalDict = await this.globalDb.model<Entry>(this.tableName, DbEntrySchema);
-        let promises:Promise<any>[] = [];
-        for(let entry of entries) {            
-            promises.push(globalDict.create(entry));
-        }
-        return await Promise.all(promises).then( ()=>{            
-            return entries.length;
+    
+    save(entry: Entry): Promise<any> {
+        return new Promise((resolve, reject)=> {
+            this.db.insert(entry, (err:any, doc:any)=> {
+                if (err){
+                    reject(err);
+                }else {
+                    resolve(doc);
+                }
+            });
         });
     }
 
-    async close() {                
-        return await this.globalDb.close().then( ()=> {
-            console.log("connection to db closed");
-            return true;
+
+    saveAll(entries: Entry[]): Promise<number> {
+        return new Promise((resolve, reject)=> {
+            this.db.insert(entries, (err:any, doc:any)=> {
+                if (err){
+                    reject(err);
+                }else {
+                    resolve(entries.length);
+                }
+            });
         });
     }
+
+
+    close(): Promise<any> {
+        return new Promise((resolve, reject)=> {
+            resolve(true);
+        });
+    }
+
+
 }
-

@@ -1,8 +1,9 @@
 import * as assert from "assert";
 import * as path from "path";
 
-import {parseWikiDump, parseDingDictionary, importDingDict} from "../dictparser";
-import {Entry} from "../dictionary";
+import {parseWikiDump, parseDingDictionary, importDict, constructDbPath} from "../dictparser";
+import {Entry, NeDBDictionary} from "../dictionary";
+import * as fs from "fs";
 
 
 const bigDumpXML =   "../../big-file/dewiktionary-20191020-pages-articles.xml";
@@ -25,7 +26,8 @@ const dingDeEnDict = {
 
 const bigDingEnDeDict = {
     path: "../../big-file/ding-de-en.txt",
-    targetDir: '/tmp/ding'
+    targetDir: '/tmp/ding',
+    entriesCount:197766
 };
 
 const TEN_SECONDS = 10*1000; // as "macro" to easy reading
@@ -59,7 +61,22 @@ suite('wikipedia', () => {
 });
 
 
-suite('ding', () =>{
+suite('ding', () => {
+    let dbFile:string;
+    let dingFile: string;
+
+    setup(() => {
+        fs.mkdirSync(bigDingEnDeDict.targetDir, {recursive:true});
+        dingFile = path.join(__dirname, bigDingEnDeDict.path);
+        dbFile = constructDbPath(dingFile, bigDingEnDeDict.targetDir);
+        try{
+            fs.unlinkSync(dbFile);
+        }catch(ex) {
+            //nix
+        }
+    });
+
+
     test('parse ding file', async () => {
         let dingFile = path.join(__dirname, dingDeEnDict.path);
         let result:Entry[] = [];
@@ -79,13 +96,12 @@ suite('ding', () =>{
         assert.equal(result[dingDeEnDict.line-1].text, dingDeEnDict.lastLine);
     });
 
-    test.skip('import ding file to databse', async ()=> {
-        let dingFile = path.join(__dirname, bigDingEnDeDict.path);
-        let targetDir = bigDingEnDeDict.targetDir;
-        let result = await importDingDict(dingFile, targetDir);
-        console.log(result);
+    test('import ding file to databse', async ()=> {
+        let dict = new NeDBDictionary(dbFile);
+        let lineCount = await importDict(dingFile,parseDingDictionary,dict);
+        assert.equal(lineCount,bigDingEnDeDict.entriesCount);
     })
-    //.timeout(TEN_SECONDS*20)
+    .timeout(TEN_SECONDS*6)
     ;
 
 });

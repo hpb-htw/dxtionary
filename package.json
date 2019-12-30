@@ -50,8 +50,10 @@
 	"dependencies": {
 		"@types/event-stream": "^3.3.34",
 		"@types/generic-pool": "^3.1.9",
+		"@types/nedb": "^1.8.9",
 		"@types/sql.js": "^1.0.2",
 		"event-stream": "^4.0.1",
+		"nedb": "^1.8.0",
 		"node-xml-stream": "^1.0.2",
 		"sql.js": "^1.0.1",
 		"trilogy": "^2.0.2",
