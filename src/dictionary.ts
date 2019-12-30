@@ -16,6 +16,9 @@ export const DbEntrySchema = {
     text: String
 };
 
+export const idMap = (word: string, entries:Entry[]) => 
+            `${word}\n${entries.map(e=>e.text).join('\n')}`;
+
 export interface Dictionary {
     /**
      * 
@@ -41,55 +44,34 @@ export interface Dictionary {
     close():Promise<any>;
 }
 
-function identity_map(entries: Entry[]): string {
-    return entries.map(e => e.text).join("\n");
-}
 
-export class DeWiktionary implements Dictionary {
+export class SqlJsDictionary implements Dictionary {
 
-    globalDb: Trilogy;
-    privateDb?: Trilogy;
-    projectDb?: Trilogy;
+    private globalDb: Trilogy;
     
-    /*@readonly*/
-    tableName = "dic";
+    readonly tableName = "dict";
+
+    
 
     /** function to rendern an array of Entry */
-    entitiesMap: (entities: Entry[]) => string;
+    entitiesMap: (word:string, entities: Entry[]) => string;
 
     /**
      * 
-     * @param globalDictDatabase path to a Ding file database, which is used as global 
-     *          (original from somewhere in internet; contains well-known entry)
-     * @param privateDictDatabase path to a Ding file database, which is used as private dictionary
-     *          (contains only user-customized entry)
-     * @param projectDictDatabase path to a Ding file database, which is customized in for the underlying 
-     *          project (contains only project specified entry)
-     * 
+     * @param dictionaryDatabasePath path to a Ding file database, which is used as global 
+     *          (original from somewhere in internet; contains well-known entry)     
     */
-    constructor(globalDictDatabase: string, privateDictDatabase?: string, projectDictDatabase?: string) {        
-        this.globalDb = connect(globalDictDatabase, {
+    constructor(dictionaryDatabasePath: string) {        
+        this.globalDb = connect(dictionaryDatabasePath, {
             client: 'sql.js'
         });
-        
-        if(privateDictDatabase) {
-            this.privateDb = connect(privateDictDatabase, {
-                client: 'sql.js'
-            });            
-        }
-        if(projectDictDatabase) {
-            this.projectDb = connect(projectDictDatabase, {
-                client: 'sql.js'
-            });
-        }
-
-        this.entitiesMap = identity_map;            
+        this.entitiesMap = idMap;
     }
 
     async query(word: string): Promise<string> {
         const globalDict = await this.globalDb.model<Entry>(this.tableName, DbEntrySchema);
         let result = await globalDict.find(["text", "like", `%${word}%`]);        
-        return this.entitiesMap(result);
+        return this.entitiesMap(word, result);
     }
 
     async save(entry: Entry) {        
@@ -103,23 +85,16 @@ export class DeWiktionary implements Dictionary {
         for(let entry of entries) {            
             promises.push(globalDict.create(entry));
         }
-        return await Promise.all(promises).then( ()=>{
-            //console.log(`created ${entries.length} entries`);
+        return await Promise.all(promises).then( ()=>{            
             return entries.length;
         });
     }
 
-    async close() {
-        //TODO check if databases are already closed.
-        let p = [this.globalDb.close().then( ()=> {
-            console.log("Global db closed");
-        })];
-        if (this.privateDb) {
-            p.push(this.privateDb.close());
-        }
-        if (this.projectDb) {
-            p.push(this.projectDb.close());
-        }
-        return await Promise.all(p);
+    async close() {                
+        return await this.globalDb.close().then( ()=> {
+            console.log("connection to db closed");
+            return true;
+        });
     }
 }
+

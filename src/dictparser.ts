@@ -3,8 +3,9 @@ const XMLStream = require("xml-stream");
 //const Parser = require("node-xml-stream"); // Too slow
 import * as fs from "fs";
 import * as es from "event-stream";
+import * as path from "path";
 
-import { Entry } from "./dictionary";
+import { Entry, SqlJsDictionary } from "./dictionary";
 
 /**
  * 
@@ -12,16 +13,18 @@ import { Entry } from "./dictionary";
  * @param insertEntry a callback function which can process a line in the ding dictionary file.
  */
 export async function parseDingDictionary(dingDictPath: string, insertEntry: (entry: Entry) => any): Promise<any> {
-    let lineNr = 0;    
+    let lineNr = 0;
     let promisses = new Promise((resolve, reject) => {
-        fs.createReadStream(dingDictPath, { flags: 'r' })
+        let s = fs.createReadStream(dingDictPath, { flags: 'r' })
             .pipe(es.split())
-            .pipe(es.map(async function (line: string, callback:any ) {
-                if (! line.startsWith("#") && line.trim().length > 0) {
+            .pipe(es.mapSync(async function (line: string/*, callback: any*/) {
+                if (!line.startsWith("#") && line.trim().length > 0) {
+                    s.pause();
                     lineNr++;
                     await insertEntry({ id: lineNr, text: `${line}` });
+                    s.resume();
                 }
-                callback(null, line + "\n");
+                //callback(null, line + "\n");
             }))
             //.pipe(process.stdout)
             .on('error', function (err) {
@@ -32,6 +35,25 @@ export async function parseDingDictionary(dingDictPath: string, insertEntry: (en
             });
     });
     return promisses;
+}
+
+export async function importDingDict(dingDictPath: string, targetDirectory: string) {
+    fs.mkdirSync(targetDirectory, { recursive: true });
+    const targetDb = constructDbPath(dingDictPath, targetDirectory);
+
+    const dict = new SqlJsDictionary(targetDb);
+    return await parseDingDictionary(dingDictPath, async (entry: Entry) => {
+        let r = await dict.save(entry);        
+    }).then(() => {
+        console.log(`close dict`);
+        //return dict.close();
+    });
+}
+
+export function constructDbPath(originPath: string, targetDirectory: string): string {
+    let originFileName = path.basename(originPath);
+    console.log(`origin ding file: ${originFileName}`);
+    return path.join(targetDirectory, originFileName + ".db");
 }
 
 /**

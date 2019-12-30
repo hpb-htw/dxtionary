@@ -33,7 +33,7 @@
 		"watch": "tsc -watch -p ./",
 		"pretest": "npm run compile",
 		"vstest": "node ./out/test/runTest.js",
-		"test": "node --trace-uncaught ./node_modules/.bin/mocha --ui tdd --require ts-node/register --watch-extensions ts,tsx \"./src/unittest/**/*.{ts,tsx}\""
+		"test": "node --inspect --trace-uncaught ./node_modules/.bin/mocha --ui tdd --require ts-node/register --watch-extensions ts,tsx \"./src/unittest/**/*.{ts,tsx}\""
 	},
 	"devDependencies": {
 		"@types/glob": "^7.1.1",

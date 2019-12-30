@@ -10,8 +10,7 @@ export function activate(context: vscode.ExtensionContext) {
 	console.log({"globalStoragePath":context.globalStoragePath});
 
 	// every lookup can use this command to perform lookup.
-	const lookupHandler = async (word: string) => {
-		console.log(`lookup '${word}'`);
+	const lookupHandler = async (word: string) => {		
 		let entry = await lookup(word, context);
 		showEntry(word, entry, context);
 	};
@@ -27,7 +26,6 @@ export function activate(context: vscode.ExtensionContext) {
 			console.log(`success lookup ${done}`);
 		});
 	};
-
 	context.subscriptions.push(vscode.commands.registerCommand(LOOKUP_CMD_UI, lookupUIHandler));
 
 }
