@@ -1,6 +1,5 @@
 //import XMLStream from "xml-stream";
 const XMLStream = require("xml-stream");
-//const Parser = require("node-xml-stream"); // Too slow
 import * as fs from "fs";
 import * as es from "event-stream";
 import * as path from "path";

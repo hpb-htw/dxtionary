@@ -32,7 +32,7 @@
 		"compile": "tsc -p ./",
 		"watch": "tsc -watch -p ./",
 		"pretest": "npm run compile",
-		"vstest": "node ./out/test/runTest.js",
+		"vsc:test": "node ./out/test/runTest.js",
 		"test": "node --inspect --trace-uncaught ./node_modules/.bin/mocha --ui tdd --require ts-node/register --watch-extensions ts,tsx \"./src/unittest/**/*.{ts,tsx}\""
 	},
 	"devDependencies": {
@@ -50,13 +50,9 @@
 	"dependencies": {
 		"@types/event-stream": "^3.3.34",
 		"@types/generic-pool": "^3.1.9",
-		"@types/nedb": "^1.8.9",
-		"@types/sql.js": "^1.0.2",
+		"@types/nedb": "^1.8.9",		
 		"event-stream": "^4.0.1",
 		"nedb": "^1.8.0",
-		"node-xml-stream": "^1.0.2",
-		"sql.js": "^1.0.1",
-		"trilogy": "^2.0.2",
 		"xml-stream": "^0.4.5"
 	},
 	"license": "MIT"

@@ -1,4 +1,3 @@
-import { connect, Trilogy } from 'trilogy';
 const Datastore = require('nedb');
 
 export type Entry = {
