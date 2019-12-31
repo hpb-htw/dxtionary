@@ -32,8 +32,8 @@
 		"compile": "tsc -p ./",
 		"watch": "tsc -watch -p ./",
 		"pretest": "npm run compile",
-		"vsc:test": "node ./out/test/runTest.js",
-		"test": "node --inspect --trace-uncaught ./node_modules/.bin/mocha --ui tdd --require ts-node/register --watch-extensions ts,tsx \"./src/unittest/**/*.{ts,tsx}\""
+		"test": "node ./out/test/runTest.js",
+		"unit:test": "node --inspect --trace-uncaught ./node_modules/.bin/mocha --ui tdd --require ts-node/register --watch-extensions ts,tsx \"./src/unittest/**/*.{ts,tsx}\""
 	},
 	"devDependencies": {
 		"@types/glob": "^7.1.1",
@@ -50,7 +50,7 @@
 	"dependencies": {
 		"@types/event-stream": "^3.3.34",
 		"@types/generic-pool": "^3.1.9",
-		"@types/nedb": "^1.8.9",		
+		"@types/nedb": "^1.8.9",
 		"event-stream": "^4.0.1",
 		"nedb": "^1.8.0",
 		"xml-stream": "^0.4.5"

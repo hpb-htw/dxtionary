@@ -4,12 +4,7 @@
 		"target": "es6",
 		"outDir": "out",
 		"lib": [
-			"es6",
-			"es2017",
-			// required for `sql.js` types
-			"webworker",
-			// required for `knex` types
-			"es2018.promise"
+			"es6"
 		],
 		"sourceMap": true,
 		"rootDir": "src",

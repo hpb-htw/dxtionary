@@ -25,7 +25,7 @@ const dingDeEnDict = {
 };
 
 const bigDingEnDeDict = {
-    path: "../../big-file/ding-de-en.txt",
+    path: "../../dict/ding-de-en.txt",
     targetDir: '/tmp/ding',
     entriesCount:197766
 };
