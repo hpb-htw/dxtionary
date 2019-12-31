@@ -16,7 +16,9 @@
 	],
 	"activationEvents": [
 		"onCommand:dxtionary.lookup",
-		"onCommand:dxtionary.lookup.ui"
+		"onCommand:dxtionary.lookup.ui",
+		"onCommand:dxtionary.lookup.cursor",
+		"onCommand:dxtionary.extract.builtin.dict"
 	],
 	"main": "./out/extension.js",
 	"contributes": {
@@ -24,6 +26,20 @@
 			{
 				"command": "dxtionary.lookup.ui",
 				"title": "dxtionary manual lookup"
+			},
+			{
+				"command": "dxtionary.lookup.cursor",
+				"title": "dxtionary lookup word under cursor"
+			},
+			{
+				"command": "dxtionary.extract.builtin.dict",
+				"title": "dxtionary extract built-in dictionary"
+			}
+		],
+		"keybindings":[
+			{
+				"command": "dxtionary.lookup.cursor",
+				"key": "ctrl+e"
 			}
 		]
 	},
