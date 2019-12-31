@@ -1,7 +1,7 @@
 import * as assert from "assert";
 import * as path from "path";
 
-import {parseWikiDump, parseDingDictionary, importDict, constructDbPath} from "../dictparser";
+import {parseDingDictionary, importDict, constructDbPath} from "../dictparser";
 import {Entry, NeDBDictionary} from "../dictionary";
 import * as fs from "fs";
 
@@ -32,33 +32,7 @@ const bigDingEnDeDict = {
 
 const TEN_SECONDS = 10*1000; // as "macro" to easy reading
 
-suite('wikipedia', () => {
-    test('parse xml dump', async () => {
-        let xmlPath = path.join(__dirname, smallDumpXML);
-        let result: any[] = [];
-        await parseWikiDump(xmlPath,  (entry) => {
-            result.push(entry);
-        });
-        let entriesCount = result.length;
-        assert.equal(entriesCount, nsZeroPageCountInSmallDumpXML);
-    });
 
-
-    test ('parse page correct', async () => {
-        let xmlPath = path.join(__dirname, halloPageDict.path);
-        let result: Entry[] = [];
-        await parseWikiDump(xmlPath,  (entry) => {
-            result.push(entry);
-        });
-        //console.log(result);
-        let hallo = result.filter((page)=> page.id===555);
-        assert.equal(hallo.length, 1, "there is only one page with tile Hallo");
-        let text = hallo[0].text.split("\n");
-        assert.equal(text.length, halloPageDict.lineOfPage);
-        assert.equal(text[0], halloPageDict.firstLine);
-        assert.equal(text[halloPageDict.lineOfPage-1], halloPageDict.lastLine);
-    });
-});
 
 
 suite('ding', () => {

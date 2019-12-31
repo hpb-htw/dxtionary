@@ -36,7 +36,7 @@
 				"title": "dxtionary extract built-in dictionary"
 			}
 		],
-		"keybindings":[
+		"keybindings": [
 			{
 				"command": "dxtionary.lookup.cursor",
 				"key": "ctrl+e"
@@ -68,8 +68,7 @@
 		"@types/generic-pool": "^3.1.9",
 		"@types/nedb": "^1.8.9",
 		"event-stream": "^4.0.1",
-		"nedb": "^1.8.0",
-		"xml-stream": "^0.4.5"
+		"nedb": "^1.8.0"
 	},
 	"license": "MIT"
 }
