@@ -1,3 +1,5 @@
+import { escapeRegExp } from "./dictionary";
+
 /**
  * intended to be used only in [dictionary.ts], not subject of public use.
  * 
@@ -28,20 +30,20 @@ export type DictCard = [Order, Order];
 
 
 /*public*/
-export function parseDingLine(ding_line:string):DictCard {    
-    let [word, translate] = ding_line.split('::');
+export function parseDingLine(ding_line:string, lineCount=-1):DictCard {    
+    let [word, translate] = ding_line.split('::');    
     return [parseOrder(word), parseTranslate(translate)];
 }
 
-export function formatDictCard(c: DictCard): string {    
+export function formatDictCard(word:string, c: DictCard): string {    
     let h = c[0], 
         t = c[1];    
     let formatedTranslate: string[] = t.map( (f:Family) => {
-        return f.map( (g:Genus) => formatGenus(g) ).join(";");
+        return f.map( (g:Genus) => formatGenus(word, g) ).join(";");
     });        
     let result = "";
     h.map( (f:Family) => {
-        return f.map( (g:Genus) => formatGenus(g) ).join(";");
+        return f.map( (g:Genus) => formatGenus(word, g) ).join(";");
     }).forEach( (head,idx) => {
         let translate = (idx < formatedTranslate.length) ? formatedTranslate[idx]: "";
         let cssc = `ding ding-row ding-row-${idx}`;
@@ -52,7 +54,7 @@ export function formatDictCard(c: DictCard): string {
 }
 
 
-export function formatGenus(g: Genus) {
+export function formatGenus(word: string, g: Genus) {
     enum PartName  {
         ORTH = "orthography",
         POS = "partOfSpeech",
@@ -75,9 +77,12 @@ export function formatGenus(g: Genus) {
         name:PartName.EXT, 
         part:e
     }) );
+    const reg = new RegExp(escapeRegExp(word), 'i');
+    const hlSpan = '<span class="ding ding-hl">$&</span>';
     let result = parts.sort( (a,b)=> a.part.position - b.part.position )
         .map( (p) => {
             let text = p.part.text;
+            text = text.replace(reg, hlSpan);
             switch(p.name) {
                 case PartName.DOMAIN: text = `[${text}]`; break;
                 case PartName.POS   : text = `{${text}}`; break;
@@ -90,8 +95,7 @@ export function formatGenus(g: Genus) {
             return `<span class="ding ding-part-${p.name}">${text}</span>`;
         })
         .join(" ");
-    return result;
-    
+    return result;    
 }
 
 export function parseOrder(order:string): Order {

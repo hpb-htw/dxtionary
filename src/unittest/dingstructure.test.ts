@@ -305,7 +305,7 @@ suite('dingstructure', () => {
                 { position: 17, text: "Winterdienst" }
             ]
         };
-        let format = formatGenus(g);
+        let format = formatGenus("Räumfahrzeug",g);
         //console.log(format);
     });
 
@@ -324,7 +324,7 @@ suite('dingstructure', () => {
         ].join(' | ');
         let en: Order = parseTranslate(enText);
         let card: DictCard = [de, en];
-        let f = formatDictCard(card);
+        let f = formatDictCard("Folgen",card);
         //console.log(f);
     });
 

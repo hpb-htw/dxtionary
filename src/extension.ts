@@ -19,7 +19,10 @@ let dictionaryPanel: vscode.WebviewPanel | undefined = undefined;
 let dictionary : Dictionary|undefined;
 let dbFile: string;
 
-const normalizedArg = (word:string|undefined) => word && word.trim().length > 0 ? [word] : []; 
+const normalizedArg = (word:string|undefined) => word && word.trim().length > 0 ? [word] : [""]; 
+
+const DingCSSStyle = "style/ding-dict.css";
+let cssStyle:string|undefined = undefined;
 
 export function activate(context: vscode.ExtensionContext) {
 
@@ -34,11 +37,25 @@ export function activate(context: vscode.ExtensionContext) {
 		dictionary = createDictionary();
 	}
 
+	// read css style
+	try{
+		let cssPath = path.join(extensionPath, DingCSSStyle);
+		cssStyle = fs.readFileSync(cssPath, "utf8");
+	}catch(ex) {
+		console.log(ex); //log exception
+	}
+
+
 	// every lookup can use this command to perform lookup.
-	const lookupHandler = async (word: string) => {		
+	const lookupHandler = async (word: string) => {
 		if(word && word.length > 0) {
-			let entry = await lookup(word, context);			
-			showEntry(word, entry, context);
+			try{
+				let entry = await lookup(word, context);
+				showEntry(word, entry, context);
+			}catch(ex) {
+				console.log(ex);//log exception
+				vscode.window.showInformationMessage(`something goes wrong as lookup ${word}`);
+			}
 		}else {
 			vscode.window.showInformationMessage("Nothing to lookup");
 		}
@@ -50,7 +67,7 @@ export function activate(context: vscode.ExtensionContext) {
 	const lookupUIHandler = async () => {
 		let word = await vscode.window.showInputBox({ placeHolder: 'type your looking word' });
 		const args = normalizedArg(word);
-		vscode.commands.executeCommand(LOOKUP_CMD, args)
+		vscode.commands.executeCommand(LOOKUP_CMD, ...args)
 			.then(done => {
 				console.log(`success lookup ${done}`);
 			});
@@ -61,7 +78,7 @@ export function activate(context: vscode.ExtensionContext) {
 	const lookupCursorHandler = async () => {
 		let word = determinateWordUnderCurser();
 		const args = normalizedArg(word);
-		vscode.commands.executeCommand(LOOKUP_CMD, args)
+		vscode.commands.executeCommand(LOOKUP_CMD, ...args)
 			.then(done => {
 				console.log(`lookup ${word} done with result ${done}`);
 			});
@@ -69,8 +86,7 @@ export function activate(context: vscode.ExtensionContext) {
 	context.subscriptions.push(vscode.commands.registerCommand(LOOKUP_CMD_CURSOR, lookupCursorHandler));
 
 	// Auxiliary commands
-	const extractBuiltinDicts = async() => {		
-		//console.log(`use dictionary ${dbFile}`);
+	const extractBuiltinDicts = async() => {
 		let extractMsg = `Please be patient, dxtionary will inform you when extracting is done.
 		Extract dictionary to database file ${dbFile}.`;
 		vscode.window.showInformationMessage(extractMsg);
@@ -84,7 +100,7 @@ export function deactivate() {
 	if(dictionary) {
 		dictionary.close()
 			.then(()=> {
-				console.log("Done");
+				console.log("Deactivate extension ok");
 			})
 			.catch((ex)=> {
 				console.log(ex); 
@@ -95,12 +111,11 @@ export function deactivate() {
 async function lookup(word: string, context: vscode.ExtensionContext): Promise<string> {
 	if(!dictionary) {
 		dictionary = createDictionary();
-	}
+	}	
 	return dictionary.query(word);
 }
 
 function showEntry(word: string, entry: string, context: vscode.ExtensionContext) {
-	
 	if (dictionaryPanel) {
 		dictionaryPanel.reveal(vscode.ViewColumn.Beside, true);
 	} else {
@@ -113,7 +128,6 @@ function showEntry(word: string, entry: string, context: vscode.ExtensionContext
 
 		dictionaryPanel.onDidDispose(
 			() => {
-				console.log(`User close dictionary view`);
 				dictionaryPanel = undefined;// assign it to undefined to unmantaine it
 			},
 			null,
@@ -121,8 +135,7 @@ function showEntry(word: string, entry: string, context: vscode.ExtensionContext
 		);
 	}	
 	dictionaryPanel.title = word;
-	let html = render(word, entry);
-	console.log(html);
+	let html = render(word, entry);	
 	dictionaryPanel.webview.html = html;
 }
 
@@ -135,26 +148,14 @@ function render(word: string, lookupResult: string):string {
 		<meta name="viewport" content="width=device-width, initial-scale=1.0">
 		<title>${word}</title>
 		<style>
-        table {
-            font-family: sans-serif;
-        }
-
-        tr {
-            vertical-align: top;
-        }
-
-        table tr:nth-child(odd) td {
-            background-color: lightskyblue;
-        }
-
-        table tr:nth-child(even) td {
-            background-color: lightgrey;
-        }
-    </style>
+        ${cssStyle}
+    	</style>
 	</head>
 	<body>
 		<h1>Lookup: ${word}</h1>
-		<div>${lookupResult}</div>
+		<div>
+		<table class="ding">${lookupResult}
+		</table></div>
 	</body>
 	</html>	
 	`;

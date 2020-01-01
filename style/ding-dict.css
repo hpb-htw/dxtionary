@@ -1,0 +1,31 @@
+table {
+    border-collapse: separate;
+    border-spacing: 2px;
+}
+
+table.ding {
+    font-family: sans-serif;
+}
+table.ding tr {
+    vertical-align: top;
+}
+
+table.ding tr:nth-child(odd) td {
+    background-color: lightskyblue;
+}
+
+table.ding tr:nth-child(even) td {
+    background-color: lightgrey;
+}
+
+td.ding.ding-row {
+    padding-left: 1em;
+}
+
+td.ding.ding-row.ding-row-0 {
+    padding-left: 0;
+}
+
+span.ding.ding-hl {
+    background-color: #fff183;
+}
