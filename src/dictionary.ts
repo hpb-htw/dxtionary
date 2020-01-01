@@ -1,4 +1,14 @@
+import { Order, parseDingLine, DictCard, Extension, formatDictCard, Family, Genus } from "./dingstructure";
+
 const Datastore = require('nedb');
+
+import * as util from 'util';
+const _toTrace = (what: any, depth: number=0) =>
+    util.inspect(what, {
+        showHidden: false,
+        depth: (depth <= 0) ? null : depth
+    });
+
 
 export type Entry = {
     /**
@@ -6,7 +16,7 @@ export type Entry = {
      */
     id: number,
     /**
-     * text description about the entry
+     * text description about the entry, this is the content of the dictionary
      */
     text: string,
 };
@@ -48,35 +58,35 @@ export interface Dictionary {
 export class NeDBDictionary implements Dictionary {
 
     db: any;
-    
-    /** function to rendern an array of Entry */    
-    entitiesMap:(word: string, entities: Entry[]) => string
+
+    /** function to rendern an array of Entry */
+    entitiesMap: (word: string, entities: Entry[]) => string
         = idMap;
 
-    constructor(dbPath:string) {
-        this.db = new Datastore( {filename:dbPath, autoload:true} );
+    constructor(dbPath: string) {
+        this.db = new Datastore({ filename: dbPath, autoload: true });
     }
 
     query(word: string): Promise<string> {
         let reg = new RegExp(word, 'i');
-        return new Promise((resolve, reject)=> {
-            this.db.find({text: {$regex: reg }}, (err:any, doc:any)=> {
+        return new Promise((resolve, reject) => {
+            this.db.find({ text: { $regex: reg } }, (err: any, doc: any) => {
                 if (err) {
                     reject(err);
-                }else {                    
+                } else {
                     resolve(this.entitiesMap(word, doc));
                 }
             });
         });
-    } 
-    
-    
+    }
+
+
     save(entry: Entry): Promise<any> {
-        return new Promise((resolve, reject)=> {
-            this.db.insert(entry, (err:any, doc:any)=> {
-                if (err){
+        return new Promise((resolve, reject) => {
+            this.db.insert(entry, (err: any, doc: any) => {
+                if (err) {
                     reject(err);
-                }else {
+                } else {
                     resolve(doc);
                 }
             });
@@ -85,35 +95,140 @@ export class NeDBDictionary implements Dictionary {
 
 
     saveAll(entries: Entry[]): Promise<number> {
-        return new Promise((resolve, reject)=> {
-            this.db.insert(entries, (err:any, doc:any)=> {
-                if (err){
+        return new Promise((resolve, reject) => {
+            this.db.insert(entries, (err: any, doc: any) => {
+                if (err) {
                     reject(err);
-                }else {
+                } else {
                     resolve(entries.length);
                 }
             });
         });
     }
 
-
     close(): Promise<any> {
-        return new Promise((resolve, reject)=> {
+        return new Promise((resolve, reject) => {
             resolve(true);
         });
     }
 }
 
-//TODO: parse each line to readable text
-export function dingLineParser(word:string,  entries: Entry[]):string {
-    let lines: string = '<table>\n';
-    for(let l of entries) {        
-        let [wordHead, wordTail] = l.text.split('::');
-        let row = `<tr>
-                      <td>${wordHead}</td>
-                      <td>${wordTail}</td>
-                    </tr>\n`;
-        lines += row;
+
+export function dingLineParser(word: string, entries: Entry[]): string {
+    type PriorityDictCard = {
+        priority: number, // 0 to 100, 100 is most priority
+        card: DictCard
+    };
+    function estimatePriority(card: DictCard, word: string): PriorityDictCard {        
+        let origin: Order = card[0];
+        let priority = -100; // lowest priority        
+        let penalty = 0;
+        const lowerWord = word.toLocaleLowerCase("de");
+        for (let [i, family] of origin.entries() ) {            
+            let isPrioritySet = false;
+            for (let genus of family ) {
+                const orthography = genus.orthography.text;                
+                const lowerOrth = orthography.toLocaleLowerCase("de");                
+                // exact match
+                if (orthography === word) {
+                    priority = 100 - penalty;                    
+                    if( isSingularNoun(genus) ){
+                        const nextFamily = origin[i+1];
+                        if (nextFamily) {
+                            // pull-up noun, sothat the {pl} form is show at top
+                            if( isPluralForm(nextFamily[0]) ) {
+                                priority += 20; 
+                            }         
+                        }               
+                    }
+                    isPrioritySet = true;
+                    break;
+                } // ignore case match 
+                else if (lowerOrth === lowerWord) {
+                    priority = 90 - penalty;
+                    isPrioritySet = true;
+                    break;
+                } // contain word
+                else if (orthography.search(word) >= 0) {
+                    priority = 80 - penalty;
+                    isPrioritySet = true;
+                    break;
+                } // contain word ignore case
+                else if (lowerOrth.search(lowerWord) >= 0) {
+                    priority = 70 - penalty;
+                    isPrioritySet = true;
+                    break;
+                } // test in extension                
+                penalty += 3;
+            }            
+            // cannot set priority by orthography
+            if (isPrioritySet) {
+                break;
+            }else {
+                penalty += 5;
+                // set priority wia extensions
+                for (let genus of family) {
+                    for(let e of genus.extension) {
+                        const text: string = e.text;
+                        const lowerText = text.toLocaleLowerCase("de");
+                        if (text === word) {
+                            priority = 60 - penalty;
+                            break;
+                        } else if (lowerWord === lowerWord) {
+                            priority = 50 - penalty;
+                            break;
+                        } else if (text.search(word) >= 0) {
+                            priority = 40 - penalty;
+                            break;
+                        } else if (lowerText.search(lowerWord) >= 0) {
+                            priority = 30 - penalty;
+                            break;
+                        }                        
+                    }
+                    penalty += 3;
+                }
+            } 
+        }
+        if (priority < -100) {
+            priority = -100;
+        }
+        console.log( {priority, c: _toTrace(card)} );
+        return { priority, card };
     }
-    return lines + '</table>\n';
+
+    function isSingularNoun(genus: Genus): boolean {
+        const gender = genus.partOfSpeech?.text;        
+        const singularForm = [
+            "m", "n", "m/f", "m/n"
+        ];
+        if (gender) {
+            return singularForm.includes(gender);
+        }else {
+            return false;
+        }
+    }
+
+    function isPluralForm(genus: Genus|undefined):boolean {
+        if(genus) {
+            const gender = genus.partOfSpeech?.text;
+            if (gender) {
+                return gender === "pl";
+            } else {
+                return false;
+            }
+        }else {
+            return false;
+        }
+    }
+
+    let pDictCard: string =
+        entries.map((e: Entry) => parseDingLine(e.text))
+            .map(  (c: DictCard) => estimatePriority(c, word))
+            .sort( (a: PriorityDictCard, b: PriorityDictCard) => b.priority - a.priority)
+            .map(  (dc:PriorityDictCard) => dc.card )
+            .map(  (sc:DictCard) => formatDictCard(sc) )
+            .join( "\n\n");
+
+    return pDictCard;
 }
+

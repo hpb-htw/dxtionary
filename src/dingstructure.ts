@@ -5,27 +5,35 @@
  */
 
 export interface Genus {
-    orthography    :string;
-    part_of_speech :string; // part in {}
-    domain         :string[];         // part in []
-    extension      :Extension[];          // part in ()
+    orthography    :Orthography;
+    partOfSpeech   :PartOfSpeech|undefined;   // part in {}
+    domain         :Domain[];                 // part in []
+    extension      :Extension[];              // part in ()
 }
 
-export type Extension = {
+type _GenusPart = {
     position:number,
     text:string
 };
+export type Extension = _GenusPart;
+export type PartOfSpeech = _GenusPart;
+export type Domain = _GenusPart;
+export type Orthography = _GenusPart;
+
+
 export type Family = Genus[];
 export type Order = Family[];
-export type Dict_Card = [Order, Order];
+export type DictCard = [Order, Order];
+
+
 
 /*public*/
-export function parseDingLine(ding_line:string):Dict_Card {
+export function parseDingLine(ding_line:string):DictCard {    
     let [word, translate] = ding_line.split('::');
     return [parseOrder(word), parseTranslate(translate)];
 }
 
-export function formatDictCard(c: Dict_Card): string {    
+export function formatDictCard(c: DictCard): string {    
     let h = c[0], 
         t = c[1];    
     let formatedTranslate: string[] = t.map( (f:Family) => {
@@ -36,29 +44,54 @@ export function formatDictCard(c: Dict_Card): string {
         return f.map( (g:Genus) => formatGenus(g) ).join(";");
     }).forEach( (head,idx) => {
         let translate = (idx < formatedTranslate.length) ? formatedTranslate[idx]: "";
-        let row = `\n  <td class="ding ding-row${idx===0?"":"-indent"}">${head}</td>\n  <td>${translate}</td>\n`;
+        let cssc = `ding ding-row ding-row-${idx}`;
+        let row = `\n  <td class="${cssc}">${head}</td>\n  <td class="${cssc}">${translate}</td>\n`;
         result += `<tr>${row}</tr>\n`;
     } );
     return result;
 }
 
+
 export function formatGenus(g: Genus) {
-    let result = `<span class="ding ding-orthography">${g.orthography}</span>`;
-    let p = g.part_of_speech;
-    if (p.length > 0) {        
-        result += ` <span class="ding ding-part_of_speech">{${p}}</span>`;
+    enum PartName  {
+        ORTH = "orthography",
+        POS = "partOfSpeech",
+        DOMAIN = "domain",
+        EXT = "extension"
     }
-    for(let d of g.domain) {
-        result += ` <span class="ding ding-domain">[${d}]</span>`;
+    type FlatPart = {
+        name:PartName, part: _GenusPart
+    };
+    
+    let parts: FlatPart[] = [];
+    parts.push({name:PartName.ORTH, part: g.orthography});
+    if(g.partOfSpeech) {
+        parts.push({name: PartName.POS, part:g.partOfSpeech});
     }
-    for(let {position, text} of g.extension) {
-        if (position === 0) { // prepend
-            result = `<span class="ding ding-orthography">(${text})</span> ` + result;
-        } else {
-            result += ` <span class="ding ding-extension">(${text})</span>`;
-        }
-    }
+    g.domain.forEach( d => parts.push({
+        name:PartName.DOMAIN, "part":d
+    }) );
+    g.extension.forEach( e => parts.push({
+        name:PartName.EXT, 
+        part:e
+    }) );
+    let result = parts.sort( (a,b)=> a.part.position - b.part.position )
+        .map( (p) => {
+            let text = p.part.text;
+            switch(p.name) {
+                case PartName.DOMAIN: text = `[${text}]`; break;
+                case PartName.POS   : text = `{${text}}`; break;
+                case PartName.EXT   : text = `(${text})`; break;
+                case PartName.ORTH:
+                default: {
+                    //Ignore
+                }
+            }
+            return `<span class="ding ding-part-${p.name}">${text}</span>`;
+        })
+        .join(" ");
     return result;
+    
 }
 
 export function parseOrder(order:string): Order {
@@ -78,9 +111,9 @@ export function parseFamily(family:string): Family {
 }
 
 export function parseGenus(genus:string):Genus {
-    let orthography = "",
-        part_of_speech = "",
-        domain: string[] = [] ,
+    let orthography:Orthography = {position:-1, text:""},
+        part_of_speech:PartOfSpeech|undefined = undefined,
+        domain: Domain[] = [] ,
         extension: Extension[] = []
     ;
     let inOrthography = true,
@@ -91,14 +124,15 @@ export function parseGenus(genus:string):Genus {
     Array.from(cleanupGenus).forEach( (c, i) => {        
         if(c === "{") {
             inPartOfSpeech = true;
-            inOrthography = inDomain = inExtend = false;            
+            inOrthography = inDomain = inExtend = false;
+            part_of_speech = {position: i, text : ""};
         } else if (c === "}") {
             inPartOfSpeech = false;
             inOrthography = true;
         } else if (c === "[") {
             inDomain = true;
-            inOrthography = inPartOfSpeech = inExtend = false;
-            domain.push("");
+            inOrthography = inPartOfSpeech = inExtend = false;            
+            domain.push({position:i, text:""});
         } else if (c=== "]") {
             inDomain = false;
             inOrthography = true;
@@ -110,13 +144,16 @@ export function parseGenus(genus:string):Genus {
         } else if (c === ")") {
             inExtend = false;
             inOrthography = true;
-        } else if (inOrthography) {
-            orthography += c;
+        } else if (inOrthography) {            
+            orthography.text += c;
+            if(orthography.position < 0) {
+                orthography.position = i;
+            }
         } else if (inPartOfSpeech) {        
-            part_of_speech += c;
+            part_of_speech!.text += c;
         } else if (inDomain) {
-            let last:string = domain.pop()||"";
-            last += c;
+            let last:Domain = domain.pop()||{position:i, text:""};
+            last.text += c;
             domain.push(last);
         } else if (inExtend) {
             let last:Extension = extension.pop() || {position:i, text:""};
@@ -124,24 +161,34 @@ export function parseGenus(genus:string):Genus {
             extension.push(last);
         }       
     });    
-    orthography = orthography.replace(/\s+/, ' ').trim();
-    //console.log({genus, cleanupGenus, orthography});
+    orthography.text = orthography.text.replace(/\s+/, ' ').trim();    
     return {
         orthography, 
-        part_of_speech, 
+        partOfSpeech: part_of_speech, 
         domain, 
         extension
     };
 }
 
 
-export function parseTranslate(translate:string): Order {
+export function parseTranslate(translate:string|undefined): Order {
     let f:Family[] = [];
-    for (let l of translate.split(' | ')) {
+    if(translate) {
+        for (let l of translate.split(' | ')) {
+            let ll:Family = [];
+            ll.push({
+                orthography: {position:0, text:l.trim()},
+                partOfSpeech: undefined, 
+                domain: [],
+                extension: []
+            });
+            f.push(ll);
+        }
+    } else {
         let ll:Family = [];
         ll.push({
-            orthography: l.trim(),
-            part_of_speech: "", 
+            orthography: {position:0, text:""}, // no translation
+            partOfSpeech: undefined, 
             domain: [],
             extension: []
         });
