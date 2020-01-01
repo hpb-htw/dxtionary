@@ -1,45 +1,37 @@
 # dxtionary README
 
-A Plugin for Visual Studio Code to show a wiktionary entry.
+An Extension for Visual Studio Code to show a wiktionary entry.
 
 ## Features
 
-* Show a wiktionary entry (Offline or Online)
-* Lookup a wiktionary entry of a word from editor (Offline or Online)
+* Lookup a word from German-English dictionary `de-en-dev.txt` from
+    https://www-user.tu-chemnitz.de/~fri/ding/
 
-## Requirements
+## Usage
 
-* Internet connection for online mode
+* After you install this Extension, you must extract the Ding-dictionary in
+`${globalStoragePath}`. To do this, just try to lookup a word (S. below). This extension
+will show a message with an extract button, just klick it and wait for some seconds.
+
+* To lookup a word by typing it from keyboard: 
+
+    - Open the Command Pallet
+    - → Type `dxtionary.lookup.ui`
+    - → Type your word to lookup
+
+* To lookup a word from a open document: use shortcut `Ctrl+e` to trigger the 
+    command `dxtionary.lookup.cursor`. It should open the dictionary automatically.
+
 
 ## Extension Settings
 
 
 This extension contributes the following settings:
 
-* TODO where does this plugin put its offline dictionary (global scope)
-* TODO where does this plugin put its offline dictionary (project scope)
+* This extension will extract a dictionary in the directory `${globalStoragePath}/hpb-htw.dxtionary`. In Linux it could be `${HOME}/.config/Code/User/globalStorage/hpb-htw.dxtionary`.
+
 
 ## Known Issues
 
-Calling out known issues can help limit users opening duplicate issues against your extension.
+This extension is slow!
 
-## Release Notes
-
-S. CHANGELOG.md
-
------------------------------------------------------------------------------------------------------------
-
-## Working with Markdown
-
-**Note:** You can author your README using Visual Studio Code.  Here are some useful editor keyboard shortcuts:
-
-* Split the editor (`Cmd+\` on macOS or `Ctrl+\` on Windows and Linux)
-* Toggle preview (`Shift+CMD+V` on macOS or `Shift+Ctrl+V` on Windows and Linux)
-* Press `Ctrl+Space` (Windows, Linux) or `Cmd+Space` (macOS) to see a list of Markdown snippets
-
-### For more information
-
-* [Visual Studio Code's Markdown Support](http://code.visualstudio.com/docs/languages/markdown)
-* [Markdown Syntax Reference](https://help.github.com/articles/markdown-basics/)
-
-**Enjoy!**
