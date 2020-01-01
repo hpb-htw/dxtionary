@@ -1,7 +1,7 @@
 import * as assert from "assert";
 import * as fs from "fs";
 
-import {Entry, NeDBDictionary} from "../dictionary";
+import {Entry, NeDBDictionary, dingLineParser} from "../dictionary";
 
 const globalDbPath = "/tmp/somepath.db";
 const entries: Entry[] = [
@@ -32,7 +32,7 @@ suite('NeDBDictionary', ()=> {
     });
 
     test('query a word', async ()=>{
-        let dict = new NeDBDictionary(globalDbPath);
+        let dict = new NeDBDictionary(globalDbPath);        
         await dict.saveAll(entries);
         let word = "TeSt"; // keep this word mix lower and UPPER case to test query
         let result = await dict.query(word);

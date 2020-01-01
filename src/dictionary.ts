@@ -50,7 +50,7 @@ export class NeDBDictionary implements Dictionary {
     db: any;
     
     /** function to rendern an array of Entry */    
-    readonly entitiesMap:(word: string, entities: Entry[]) => string
+    entitiesMap:(word: string, entities: Entry[]) => string
         = idMap;
 
     constructor(dbPath:string) {
@@ -63,7 +63,7 @@ export class NeDBDictionary implements Dictionary {
             this.db.find({text: {$regex: reg }}, (err:any, doc:any)=> {
                 if (err) {
                     reject(err);
-                }else {
+                }else {                    
                     resolve(this.entitiesMap(word, doc));
                 }
             });
@@ -102,6 +102,18 @@ export class NeDBDictionary implements Dictionary {
             resolve(true);
         });
     }
+}
 
-
+//TODO: parse each line to readable text
+export function dingLineParser(word:string,  entries: Entry[]):string {
+    let lines: string = '<table>\n';
+    for(let l of entries) {        
+        let [wordHead, wordTail] = l.text.split('::');
+        let row = `<tr>
+                      <td>${wordHead}</td>
+                      <td>${wordTail}</td>
+                    </tr>\n`;
+        lines += row;
+    }
+    return lines + '</table>\n';
 }
