@@ -109,11 +109,11 @@ suite('NeDBDictionary', () => {
         //console.log(result);
     });
 
-    test.only('big query', async () => {
+    test('big query', async () => {
         const dummyFile = '/home/hbui/.config/Code/User/globalStorage/hpb-htw.dxtionary/ding-de-en-dev.txt.db';
         let dict = new NeDBDictionary(dummyFile);
         dict.entitiesMap = dingLineParser;
-        let result = await dict.query('Winter');
+        let result = await dict.query('ding');
         console.log(result);
     }).timeout(TEN_SECONDS*4);
 });

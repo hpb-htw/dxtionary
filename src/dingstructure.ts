@@ -77,11 +77,12 @@ export function formatGenus(word: string, g: Genus) {
         name:PartName.EXT, 
         part:e
     }) );
-    const reg = new RegExp(escapeRegExp(word), 'i');
+    const safeWord = escapeHtml(word);
+    const reg = new RegExp(escapeRegExp(safeWord), 'i');
     const hlSpan = '<span class="ding ding-hl">$&</span>';
     let result = parts.sort( (a,b)=> a.part.position - b.part.position )
         .map( (p) => {
-            let text = p.part.text;
+            let text = escapeHtml(p.part.text);
             text = text.replace(reg, hlSpan);
             switch(p.name) {
                 case PartName.DOMAIN: text = `[${text}]`; break;
@@ -200,3 +201,12 @@ export function parseTranslate(translate:string|undefined): Order {
     }
     return f;
 }
+
+function escapeHtml(unsafe:string) {
+    return unsafe
+         .replace(/&/g, "&amp;")
+         .replace(/</g, "&lt;")
+         .replace(/>/g, "&gt;")
+         .replace(/"/g, "&quot;")
+         .replace(/'/g, "&#039;");
+ }

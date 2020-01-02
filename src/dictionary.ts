@@ -136,6 +136,20 @@ function estimatePriority(card: DictCard, word: string): PriorityDictCard {
     let priority = -100; // lowest priority        
     let penalty = 0;
     const lowerWord = word.toLocaleLowerCase("de");
+
+    // pull-up noun, sothat the {pl} form is show at top
+    function bonusPriority(genus:Genus, i:number): number {
+        if (isSingularNoun(genus)) {
+            const nextFamily = origin[i + 1];
+            if (nextFamily) {
+                // pull-up noun, sothat the {pl} form is show at top
+                if (isPluralForm(nextFamily[0])) {
+                    return 20;
+                }
+            }
+        }
+        return 0;
+    }
     for (let [i, family] of origin.entries()) {
         let isPrioritySet = false;
         for (let genus of family) {
@@ -143,21 +157,12 @@ function estimatePriority(card: DictCard, word: string): PriorityDictCard {
             const lowerOrth = orthography.toLocaleLowerCase("de");
             // exact match
             if (orthography === word) {
-                priority = 100 - penalty;
-                if (isSingularNoun(genus)) {
-                    const nextFamily = origin[i + 1];
-                    if (nextFamily) {
-                        // pull-up noun, sothat the {pl} form is show at top
-                        if (isPluralForm(nextFamily[0])) {
-                            priority += 20;
-                        }
-                    }
-                }
+                priority = 100 - penalty + bonusPriority(genus, i);                
                 isPrioritySet = true;
                 break;
             } // ignore case match 
             else if (lowerOrth === lowerWord) {
-                priority = 90 - penalty;
+                priority = 90 - penalty + bonusPriority(genus, i);                
                 isPrioritySet = true;
                 break;
             } // contain word

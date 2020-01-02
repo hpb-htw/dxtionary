@@ -1,17 +1,19 @@
 # dxtionary README
 
-An Extension for Visual Studio Code to show a wiktionary entry.
+Lookup a word without changing context.
 
 ## Features
 
 * Lookup a word from German-English dictionary `de-en-dev.txt` from
     https://www-user.tu-chemnitz.de/~fri/ding/
 
+![Screenshot](./doc/Screenshot_demo.png)
+
 ## Usage
 
 * After you install this Extension, you must extract the Ding-dictionary in
 `${globalStoragePath}`. To do this, just try to lookup a word (S. below). This extension
-will show a message with an extract button, just klick it and wait for some seconds.
+will show a message with an extract button, just click it and wait for some seconds (or maybe some minutes).
 
 * To lookup a word by typing it from keyboard: 
 
