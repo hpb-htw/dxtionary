@@ -15,6 +15,7 @@ export type Entry = {
      * unique id of the entry in a dictionary
      */
     id: number,
+    title ?: string,
     /**
      * text description about the entry, this is the content of the dictionary
      */
@@ -33,8 +34,9 @@ export interface Dictionary {
     /**
      * 
      * @param word searching word in dictionary database
-     * @returns a Promise of String. This String is ready to be shown on the client of 
-     * this dictionary.
+     * @returns a Promise of String. The String is ready to be shown on the client of 
+     * this dictionary. Normally, the string is a HTML-Block which is embedded in WebView Panel 
+     * of this extension.
      */
     query(word: string): Promise<string>;
 

@@ -24,6 +24,8 @@ const normalizedArg = (word:string|undefined) => word && word.trim().length > 0 
 const DingCSSStyle = "style/ding-dict.css";
 let cssStyle:string|undefined = undefined;
 
+const INIT_TEXT = "<span>::</span>";
+
 export function activate(context: vscode.ExtensionContext) {
 
 	let {globalStoragePath,storagePath,extensionPath} = context;
@@ -45,6 +47,7 @@ export function activate(context: vscode.ExtensionContext) {
 		console.log(ex); //log exception
 	}
 
+	showEntry("::", INIT_TEXT, context);
 
 	// every lookup can use this command to perform lookup.
 	const lookupHandler = async (word: string) => {
@@ -134,7 +137,7 @@ function showEntry(word: string, entry: string, context: vscode.ExtensionContext
 			context.subscriptions
 		);
 	}	
-	dictionaryPanel.title = word;
+	dictionaryPanel.title = "Suche " + word;
 	let html = render(word, entry);	
 	dictionaryPanel.webview.html = html;
 }
@@ -152,7 +155,7 @@ function render(word: string, lookupResult: string):string {
     	</style>
 	</head>
 	<body>
-		<h1>Lookup: ${word}</h1>
+		<h1>Suche nach: ${word}</h1>
 		<div>
 		<table class="ding">${lookupResult}
 		</table></div>
