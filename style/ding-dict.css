@@ -5,9 +5,16 @@ table {
 
 table.ding {
     font-family: sans-serif;
+    width: 100%;
 }
 table.ding tr {
     vertical-align: top;
+    width: 50%;
+}
+
+table.ding tr td {
+    width: 50%;
+    max-width: 25em;
 }
 
 table.ding tr:nth-child(odd) td {

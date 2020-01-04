@@ -121,14 +121,18 @@ type PriorityDictCard = {
 };
 
 export const dingLineParser = (word: string, entries: Entry[]): string => {
-    let pDictCard: string =
-        entries.map((e: Entry, i: number) => parseDingLine(e.text, i))
-            .map((c: DictCard) => estimatePriority(c, word))
-            .sort((a: PriorityDictCard, b: PriorityDictCard) => b.priority - a.priority)
-            .map((dc: PriorityDictCard) => dc.card)
-            .map((sc: DictCard) => formatDictCard(word, sc))
-            .join("\n\n");
-    return pDictCard;
+    if(entries.length > 0) {
+        let pDictCard: string =
+            entries.map((e: Entry, i: number) => parseDingLine(e.text, i))
+                .map((c: DictCard) => estimatePriority(c, word))
+                .sort((a: PriorityDictCard, b: PriorityDictCard) => b.priority - a.priority)
+                .map((dc: PriorityDictCard) => dc.card)
+                .map((sc: DictCard) => formatDictCard(word, sc))
+                .join("\n\n");
+        return pDictCard;
+    }else {
+        return `<span class="ding ding-not-found">Kein Ergebnis für den Such nach ${word}</span>`;
+    }
 };
 
 function estimatePriority(card: DictCard, word: string): PriorityDictCard {

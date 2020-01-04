@@ -50,7 +50,7 @@ export function activate(context: vscode.ExtensionContext) {
 	const lookupHandler = async (word: string) => {
 		if(word && word.length > 0) {
 			try{
-				let entry = await lookup(word, context);
+				let entry = await lookup(word, context);				
 				showEntry(word, entry, context);
 			}catch(ex) {
 				console.log(ex);//log exception
@@ -80,7 +80,7 @@ export function activate(context: vscode.ExtensionContext) {
 		const args = normalizedArg(word);
 		vscode.commands.executeCommand(LOOKUP_CMD, ...args)
 			.then(done => {
-				console.log(`lookup ${word} done with result ${done}`);
+				console.log(`lookup ${word} done`);
 			});
 	};
 	context.subscriptions.push(vscode.commands.registerCommand(LOOKUP_CMD_CURSOR, lookupCursorHandler));
@@ -115,7 +115,7 @@ async function lookup(word: string, context: vscode.ExtensionContext): Promise<s
 	return dictionary.query(word);
 }
 
-function showEntry(word: string, entry: string, context: vscode.ExtensionContext) {
+function showEntry(word: string, entry: string, context: vscode.ExtensionContext) {	
 	if (dictionaryPanel) {
 		dictionaryPanel.reveal(vscode.ViewColumn.Beside, true);
 	} else {
