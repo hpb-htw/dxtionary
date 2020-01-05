@@ -4,7 +4,7 @@ import * as fs from 'fs';
 import { Dictionary, NeDBDictionary} from './dictionary';
 import { constructDbPath, importDict} from './dictImporter';
 import { parseDingDictionary, dingLineParser } from './dingstructure';
-import { WikiDictionary } from './wikidictionary';
+
 
 
 const LOOKUP_CMD        = "dxtionary.lookup";
@@ -35,7 +35,7 @@ export function activate(context: vscode.ExtensionContext) {
 	console.log({globalStoragePath, extensionPath, storagePath:String(storagePath)});
 	// check if dictionary file exists?
 	//let dictPath = path.join(extensionPath, `${DICT_DIR}/${BUILTIN_DICTS.ding}`);
-	let dictPath = path.join(extensionPath, `${DICT_DIR}/${BUILTIN_DICTS["de-wiki"]}`);
+	let dictPath = path.join(extensionPath, `${DICT_DIR}/${BUILTIN_DICTS["ding"]}`);
 	dbFile = constructDbPath(dictPath, globalStoragePath);
 	console.log(dbFile);
 	if (! fs.existsSync(dbFile)) {
@@ -231,7 +231,7 @@ function showMsgWhenDictNotExist() {
 }
 
 function createDictionary():Dictionary {
-	let dict = new WikiDictionary(dbFile);
-	//dict.entitiesMap = dingLineParser;
+	let dict = new NeDBDictionary(dbFile);
+	dict.entitiesMap = dingLineParser;
 	return dict;
 }

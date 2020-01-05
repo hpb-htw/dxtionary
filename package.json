@@ -50,14 +50,14 @@
 		"clean": "rm -rf out",
 		"pretest": "npm run compile",
 		"test": "node ./out/test/runTest.js",
-		"unit:test": "node --inspect --trace-uncaught ./node_modules/.bin/mocha --ui tdd --require ts-node/register --watch-extensions ts,tsx \"./src/unittest/**/*.{ts,tsx}\""
+		"unit:test": "node --inspect --trace-uncaught ./node_modules/.bin/mocha --ui tdd --require ts-node/register --watch-extensions ts,tsx \"./src/unittest/**/*.{ts,tsx}\"",
+		"refresh": "rm -rf node_modules out; npm install --no-optional"
 	},
 	"devDependencies": {
 		"@types/glob": "^7.1.1",
 		"@types/mocha": "^5.2.7",
 		"@types/node": "^12.11.7",
 		"@types/vscode": "^1.41.0",
-		"electron-rebuild": "^1.8.8",
 		"glob": "^7.1.5",
 		"mocha": "^6.2.2",
 		"ts-node": "^8.5.4",
@@ -66,11 +66,9 @@
 		"vscode-test": "^1.2.2"
 	},
 	"dependencies": {
-		"@types/better-sqlite3": "^5.4.0",
 		"@types/event-stream": "^3.3.34",
 		"@types/generic-pool": "^3.1.9",
 		"@types/nedb": "^1.8.9",
-		"better-sqlite3": "^5.4.3",
 		"event-stream": "^4.0.1",
 		"nedb": "^1.8.0"
 	},
