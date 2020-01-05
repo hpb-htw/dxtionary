@@ -4,6 +4,7 @@ import * as fs from 'fs';
 import { Dictionary, NeDBDictionary} from './dictionary';
 import { constructDbPath, importDict} from './dictImporter';
 import { parseDingDictionary, dingLineParser } from './dingstructure';
+import { WikiDictionary } from './wikidictionary';
 
 
 const LOOKUP_CMD        = "dxtionary.lookup";
@@ -13,7 +14,8 @@ const EXTRACT_BUILT_IN_DICT = "dxtionary.extract.builtin.dict";
 
 const DICT_DIR = "dict";
 const BUILTIN_DICTS = {
-	"ding": "ding-de-en-dev.txt"
+	"ding": "ding-de-en-dev.txt",
+	"de-wiki": "dewiktionary-20191020-pages-articles.db"
 };
 
 let dictionaryPanel: vscode.WebviewPanel | undefined = undefined;
@@ -31,9 +33,11 @@ export function activate(context: vscode.ExtensionContext) {
 
 	let {globalStoragePath,storagePath,extensionPath} = context;
 	console.log({globalStoragePath, extensionPath, storagePath:String(storagePath)});
-	// check if ding dictionary exists?
-	let dingDictPath = path.join(extensionPath, `${DICT_DIR}/${BUILTIN_DICTS.ding}`);
-	dbFile = constructDbPath(dingDictPath, globalStoragePath);
+	// check if dictionary file exists?
+	//let dictPath = path.join(extensionPath, `${DICT_DIR}/${BUILTIN_DICTS.ding}`);
+	let dictPath = path.join(extensionPath, `${DICT_DIR}/${BUILTIN_DICTS["de-wiki"]}`);
+	dbFile = constructDbPath(dictPath, globalStoragePath);
+	console.log(dbFile);
 	if (! fs.existsSync(dbFile)) {
 		showMsgWhenDictNotExist();
 	} else {
@@ -94,7 +98,7 @@ export function activate(context: vscode.ExtensionContext) {
 		let extractMsg = `Please be patient, dxtionary will inform you when extracting is done.
 		Extract dictionary to database file ${dbFile}.`;
 		vscode.window.showInformationMessage(extractMsg);
-		_extractBuiltinDicts(dingDictPath, dbFile);
+		_extractBuiltinDicts(dictPath, dbFile);
 	};
 	context.subscriptions.push(vscode.commands.registerCommand(EXTRACT_BUILT_IN_DICT, extractBuiltinDicts));
 }
@@ -191,6 +195,7 @@ function determinateWordUnderCurser(): string|undefined {
 	}
 }
 
+/*this mechanism only work for NeDB not for wiki*/
 function _extractBuiltinDicts(dingDictPath:string, dbFile:string){
 	try {
 		fs.unlinkSync(dbFile);
@@ -226,7 +231,7 @@ function showMsgWhenDictNotExist() {
 }
 
 function createDictionary():Dictionary {
-	let dict = new NeDBDictionary(dbFile);
-	dict.entitiesMap = dingLineParser;
+	let dict = new WikiDictionary(dbFile);
+	//dict.entitiesMap = dingLineParser;
 	return dict;
 }
