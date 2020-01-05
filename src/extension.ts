@@ -1,8 +1,9 @@
 import * as vscode from 'vscode';
 import * as path from 'path';
 import * as fs from 'fs';
-import { Dictionary, NeDBDictionary, dingLineParser } from './dictionary';
-import { constructDbPath, importDict, parseDingDictionary } from './dictparser';
+import { Dictionary, NeDBDictionary} from './dictionary';
+import { constructDbPath, importDict} from './dictImporter';
+import { parseDingDictionary, dingLineParser } from './dingstructure';
 
 
 const LOOKUP_CMD        = "dxtionary.lookup";

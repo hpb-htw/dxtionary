@@ -1,9 +1,10 @@
 import * as assert from "assert";
 import * as path from "path";
 
-import {parseDingDictionary, importDict, constructDbPath} from "../dictparser";
+import {importDict, constructDbPath} from "../dictImporter";
 import {Entry, NeDBDictionary} from "../dictionary";
 import * as fs from "fs";
+import { parseDingDictionary } from "../dingstructure";
 
 
 const bigDumpXML =   "../../big-file/dewiktionary-20191020-pages-articles.xml";

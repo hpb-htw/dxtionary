@@ -1,12 +1,13 @@
 import * as assert from "assert";
 import * as fs from "fs";
 
-import { Entry, NeDBDictionary, dingLineParser } from "../dictionary";
+import { Entry, NeDBDictionary} from "../dictionary";
+import { dingLineParser } from "../dingstructure";
 
 const globalDbPath = "/tmp/somepath.db";
 const entries: Entry[] = [
-    { id: 1, text: "hello" },
-    { id: 2, text: "test" }
+    { id: 1, title:"hello", text: "hello" },
+    { id: 2, title:"test", text: "test" }
 ];
 
 const TEN_SECONDS = 10 * 1000; // as "macro" to easy reading
@@ -60,6 +61,7 @@ suite('NeDBDictionary', () => {
         for (let i = 0; i < 100_000; ++i) {
             bigEntries.push({
                 id: i,
+                title: `t${i}`,
                 text: `${i}-${getNonce()}`
             });
         }
@@ -78,6 +80,7 @@ suite('NeDBDictionary', () => {
         let dummyData: Entry[] = [
             {
                 id: 1, 
+                title: "Im",
                 text: [
                     'Im Winter Einfrieren des Wassers im Behälter verhüten. (Sicherheitshinweis)',
                     'In winter prevent the water in the container from freezing. (safety note)'
@@ -85,6 +88,7 @@ suite('NeDBDictionary', () => {
             },
             {
                 id: 2, 
+                title: "Winter",
                 text: [
                     'Winter {m}',
                     'Winter {pl}',
@@ -99,6 +103,7 @@ suite('NeDBDictionary', () => {
             },
             {
                 id: 3,
+                title: "Winter",
                 text: 'Winter {m}; Winterzeit {f} :: wintertime; wintertide'
             }
         ];
