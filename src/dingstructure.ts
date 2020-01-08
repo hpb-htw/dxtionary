@@ -81,18 +81,60 @@ export class DingDictionary implements Dictionary {
 
 /*public*/
 export function dingLineParser (word: string, entries: Entry[]): string  {
+
+    function buildFlexikon(dictCarts: PriorityDictCard[]):string {
+        let result = "";
+        let families:Family[] = dictCarts[0].card.front.family;
+        let familyIndex:number = 0, 
+            vocabularyIndex: number = 0,
+            matchingWord:Vocabulary ,
+            foundMatch = false;
+        for(familyIndex = 0; (familyIndex < families.length) && (!foundMatch); ++familyIndex) {
+            let family = families[familyIndex];
+            for(vocabularyIndex = 0; vocabularyIndex < family.length; ++ vocabularyIndex) {
+                matchingWord = family[vocabularyIndex];
+                let checkText = matchingWord.orthography.text;
+                console.log(`familyIdx: ${familyIndex} checktext: ${checkText}`);
+                if ( checkText.toLocaleLowerCase() === word.toLocaleLowerCase()) {
+                    foundMatch = true;
+                    break;
+                }
+            }
+        }
+        if (foundMatch) {
+            let pos:PartOfSpeech = <PartOfSpeech> matchingWord!.partOfSpeech;
+            let gender = pos.text;
+            if (Genus.includes(gender)) {
+                result += dekliniere(matchingWord!.orthography.text, <NomenForm>gender);
+                let nextFamilyIdx = familyIndex;
+                console.log(`nextFamilyIdx ${nextFamilyIdx}, ${families.length}`);
+                if (nextFamilyIdx < families.length) {
+                    let secondFamily = families[nextFamilyIdx];
+                    let secondeWord = secondFamily[vocabularyIndex];
+                    console.log(secondeWord);
+                    if (secondeWord && Genus.includes(<NomenForm>secondeWord.partOfSpeech?.text) ) {
+                        result += dekliniere(secondeWord.orthography.text, <NomenForm> secondeWord.partOfSpeech?.text);
+                    }
+                }
+            }
+        }
+        return result;
+    }
+
     if(entries.length > 0) {
         let dictCarts: PriorityDictCard[] =
             entries.map((e: Entry, i: number) => parseDingLine(e.text, i))
                 .map((c: DictCard) => estimatePriority(c, word))
                 .sort((a: PriorityDictCard, b: PriorityDictCard) => b.priority - a.priority);
+        let flexikon = buildFlexikon(dictCarts);
         let pDictCard: string = dictCarts
                 .map((dc: PriorityDictCard) => dc.card)
                 .map((sc: DictCard) => formatDictCard(word, sc))
                 .join("\n\n");
         pDictCard = `<table class="ding">${pDictCard}</table>`;
-        let family:Family[] = dictCarts[0].card.front.family;
-        //let firstWord:Vocabulary = dictCarts[0].card.front.family[0][0];
+
+        /*
+        let family:Family[] = dictCarts[0].card.front.family;        
         let firstWord:Vocabulary = family[0][0];
         let pos = firstWord.partOfSpeech;
         if (pos) {
@@ -110,7 +152,8 @@ export function dingLineParser (word: string, entries: Entry[]): string  {
                 pDictCard = deklination + pDictCard;
             }
         }
-        return pDictCard;
+        */
+        return flexikon + pDictCard;
     }else {
         return `<span class="ding ding-not-found">Kein Ergebnis für den Such nach ${word}</span>`;
     }

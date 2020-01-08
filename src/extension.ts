@@ -27,7 +27,8 @@ const normalizedArg = (word:string|undefined) => word && word.trim().length > 0 
 const DingCSSStyle = "style/ding-dict.css";
 let cssStyle:string|undefined = undefined;
 
-const INIT_TEXT = "<span>::</span>";
+let webviewDictPanelReady = false;
+const INIT_TEXT = "<span>Initialisiert Wörterbuch, bitte etwas Gedult haben</span>";
 
 export function activate(context: vscode.ExtensionContext) {
 
@@ -58,15 +59,14 @@ export function activate(context: vscode.ExtensionContext) {
 	const lookupHandler = async (word: string) => {
 		if(word && word.length > 0) {
 			try{
-				let entry = await lookup(word, context);
-				console.log(entry);
+				let entry = await lookup(word, context);				
 				showEntry(word, entry, context);
 			}catch(ex) {
 				console.log(ex);//log exception
 				vscode.window.showInformationMessage(`something goes wrong as lookup ${word}`);
 			}
 		}else {
-			vscode.window.showInformationMessage("Nothing to lookup");
+			vscode.window.showInformationMessage(webviewDictPanelReady ? "Kein Wort zum Nachschlagen" : "Wörterbuch ist initialisiert");
 		}
 	};
 	context.subscriptions.push(vscode.commands.registerCommand(LOOKUP_CMD, lookupHandler));
@@ -89,7 +89,7 @@ export function activate(context: vscode.ExtensionContext) {
 		const args = normalizedArg(word);
 		vscode.commands.executeCommand(LOOKUP_CMD, ...args)
 			.then(done => {
-				console.log(`lookup ${word} done`);
+				console.log(`lookup „${word}“ done`);
 			});
 	};
 	context.subscriptions.push(vscode.commands.registerCommand(LOOKUP_CMD_CURSOR, lookupCursorHandler));
@@ -146,6 +146,7 @@ function showEntry(word: string, entry: string, context: vscode.ExtensionContext
 	dictionaryPanel.title = "Suche " + word;
 	let html = render(word, entry);	
 	dictionaryPanel.webview.html = html;
+	webviewDictPanelReady = true;
 }
 
 function render(word: string, lookupResult: string):string {	
@@ -181,16 +182,19 @@ function determinateWordUnderCurser(): string|undefined {
 
 	const { document, selection } = activeTextEditor;
 	const { end, start } = selection;
-
+	
 	// text too long, so do nothing
 	if (!selection.isSingleLine) {
 		return undefined;
 	}
-
-	let cursorPosition = start;
-	let wordRange = document.getWordRangeAtPosition(cursorPosition);
+	let wordRange:vscode.Range|undefined;
+	if (start.character === end.character){			
+		wordRange = document.getWordRangeAtPosition(start);
+	}else {		
+		wordRange = new vscode.Range(start, end);
+	}
 	if(wordRange) {
-		let highlight = document.getText(wordRange);
+		let highlight = document.getText(wordRange);		
 		return highlight;
 	}else {
 		return undefined;

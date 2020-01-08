@@ -13,10 +13,10 @@ const singularFeminin = {
 };
 
 const singularNeutral = {
-    nominativ: [ {artikel: "das", deklination: "_"} , {artikel:"ein",   deklination:"es"}, {artikel:"", deklination:"es"} ],
-      genitiv: [ {artikel: "des", deklination: "_"} , {artikel:"eines", deklination:"en"}, {artikel:"", deklination:"en"} ],
-        dativ: [ {artikel: "dem", deklination: "_"} , {artikel:"einem", deklination:"en"}, {artikel:"", deklination:"em"} ],
-    akkusativ: [ {artikel: "das", deklination: "_"} , {artikel:"ein",   deklination:"es"}, {artikel:"", deklination:"es"} ],
+    nominativ: [ {artikel: "das", deklination: "e"} , {artikel:"ein",   deklination:"es"}, {artikel:"", deklination:"es"} ],
+      genitiv: [ {artikel: "des", deklination: "en"} , {artikel:"eines", deklination:"en"}, {artikel:"", deklination:"en"} ],
+        dativ: [ {artikel: "dem", deklination: "en"} , {artikel:"einem", deklination:"en"}, {artikel:"", deklination:"em"} ],
+    akkusativ: [ {artikel: "das", deklination: "e"} , {artikel:"ein",   deklination:"es"}, {artikel:"", deklination:"es"} ],
 };
 
 const plural = {
@@ -30,12 +30,13 @@ export type NomenForm = "m"|"f"|"n"|"pl";
 export const Genus:string[] = ["m", "f", "n", "pl"];
 
 export function dekliniere(nomen:string, nomenForm:NomenForm, genitiv:string|undefined=undefined) {
-    let tab:any;
+    let tab:any,
+        numerus:string = "Singular";
     switch(nomenForm) {
         case "m": {tab = singularMaskulin;} break;
         case "f": {tab = singularFeminin;} break;
         case "n": {tab = singularNeutral;} break;
-        case "pl": {tab = plural;} break;
+        case "pl": {tab = plural; numerus = "Plural";} break;
     }
     let kasus = {
         "nominativ": "Nom.", 
@@ -44,7 +45,9 @@ export function dekliniere(nomen:string, nomenForm:NomenForm, genitiv:string|und
         "akkusativ": "Akk."
     }
     ;
-    let table = `<table class="declination">`;
+    let table = 
+`<h4>${numerus}</h4>
+<table class="declination">`;
     const css:any = {
         "art": "declination declination-article",
         "dec": "declination declination-declination",
