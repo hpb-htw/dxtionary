@@ -1,11 +1,10 @@
-# dxtionary README
+# dxtionary `/ˈdɪkʃ(ə)n(ə)ɹi/` README
 
-Lookup a word without changing context.
+Lookup a german word without changing your writing context.
 
 ## Features
 
-* Lookup a word from German-English dictionary `de-en-dev.txt` from
-    https://www-user.tu-chemnitz.de/~fri/ding/
+* Lookup a word from German-English dictionary `de-en-dev.txt` from https://www-user.tu-chemnitz.de/~fri/ding/
 
 ![Screenshot](./doc/Screenshot_demo.png)
 
@@ -21,19 +20,24 @@ will show a message with an extract button, just click it and wait for some seco
     - → Type `dxtionary.lookup.ui`
     - → Type your word to lookup
 
-* To lookup a word from a open document: use shortcut `Ctrl+e` to trigger the 
-    command `dxtionary.lookup.cursor`. It should open the dictionary automatically.
+* To lookup a word from an open document: use shortcut <kbd>Ctrl</kbd>+<kbd>e</kbd>` to trigger the 
+    command `dxtionary.lookup.cursor`. It should open the dictionary automatically. S. [#Known Issues] Nr 4.
 
 
-## Extension Settings
+## Extension Files
 
-
-This extension contributes the following settings:
+This extension puts the following file (except itself) in your computer:
 
 * This extension will extract a dictionary in the directory `${globalStoragePath}/hpb-htw.dxtionary`. In Linux it could be `${HOME}/.config/Code/User/globalStorage/hpb-htw.dxtionary`.
 
 
 ## Known Issues
 
-This extension is slow!
-
+1. This extension is slow!
+2. The dictionary  cannot find plural form  in occasionally cases, where the plural form is not found directly 
+   after singular form.
+3. This extension use NeDB as database, so it consums a relative large amount of memory. I would use SQLite for this but
+   then this extension is not portable.   
+4. When the dictionary is triggert for the first time (once per session), it shows a curious message "Kein Wort zum Nachschlagen"
+   or something like that, just ignore it and presse <kbd>Ctrl</kbd>+<kbd>e</kbd> again to let the dictionary lookup your word.
+5. Because the dictionary file does not contain Genitive Form of nouns, this extension cannot show Deklination with correct Genitiv. They are marked with a red „s“.
