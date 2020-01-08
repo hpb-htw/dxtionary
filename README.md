@@ -16,7 +16,7 @@ will show a message with an extract button, just click it and wait for some seco
 
 * To lookup a word by typing it from keyboard: 
 
-    - Open the Command Pallet
+    - Launch VS Code Quick Open (<kbd>Ctrl</kbd>+<kbd>p</kbd>)
     - → Type `dxtionary.lookup.ui`
     - → Type your word to lookup
 

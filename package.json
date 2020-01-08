@@ -3,10 +3,10 @@
 	"publisher": "hpb-htw",
 	"displayName": "dxtionary",
 	"description": "",
-	"version": "0.0.1",
+	"version": "0.0.0",
 	"repository": {
 		"type": "git",
-		"url": "git://notset.host/path"
+		"url": "https://github.com/hpb-htw/dxtionary.git"
 	},
 	"engines": {
 		"vscode": "^1.41.0"
@@ -14,6 +14,7 @@
 	"categories": [
 		"Other"
 	],
+	"keywords": ["dictionary", "German", "Deutsch", "Ding"],
 	"activationEvents": [
 		"onCommand:dxtionary.lookup",
 		"onCommand:dxtionary.lookup.ui",
@@ -45,6 +46,7 @@
 	},
 	"scripts": {
 		"vscode:prepublish": "npm run compile",
+		"vscode:public": "./scripts/release.sh",
 		"compile": "tsc -p ./",
 		"watch": "tsc -watch -p ./",
 		"clean": "rm -rf out",
