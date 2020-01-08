@@ -1,11 +1,9 @@
-table {
-    border-collapse: separate;
-    border-spacing: 2px;
-}
-
 table.ding {
     font-family: sans-serif;
     width: 100%;
+    border-collapse: separate;
+    border-spacing: 2px;
+    padding-left: 3px;
 }
 table.ding tr {
     vertical-align: top;
@@ -41,7 +39,12 @@ span.ding.ding-hl {
 table.declination {
     font-family: sans-serif;
     font-size: small;
-    border-spacing: 5px 2px;
+    border-spacing: 6px 2px;
+    margin-bottom: 25px;
+}
+
+table.declination tr td:first {
+    border-spacing: 2px;
 }
 
 table.declination tr:nth-child(odd) td {
@@ -60,7 +63,8 @@ table.declination tr:nth-child(even) td {
     color: red;
 }
 .declination.declination-declination {
-    font-weight: bold;
+    font-weight: bold;    
+    width: 2em;
 }
 
 .declination.declination-case {

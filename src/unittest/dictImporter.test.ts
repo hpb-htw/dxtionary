@@ -2,9 +2,9 @@ import * as assert from "assert";
 import * as path from "path";
 
 import {importDict, constructDbPath} from "../dictImporter";
-import {Entry, NeDBDictionary} from "../dictionary";
+import {Entry} from "../dictionary";
 import * as fs from "fs";
-import { parseDingDictionary } from "../dingstructure";
+import { parseDingDictionary, DingDictionary } from "../dingstructure";
 
 
 const bigDumpXML =   "../../big-file/dewiktionary-20191020-pages-articles.xml";
@@ -72,7 +72,7 @@ suite('ding', () => {
     });
 
     test('import ding file to databse', async ()=> {
-        let dict = new NeDBDictionary(dbFile);
+        let dict = new DingDictionary(dbFile);
         let lineCount = await importDict(dingFile,parseDingDictionary,dict);
         assert.equal(lineCount,bigDingEnDeDict.entriesCount);
     })

@@ -1,13 +1,128 @@
-import { escapeRegExp, Entry } from "./dictionary";
+import { escapeRegExp, Entry, Dictionary, idMap } from "./dictionary";
 import * as fs from "fs";
 import * as es from "event-stream";
+import { Genus, dekliniere, NomenForm } from "./adjective_declination";
+
+const Datastore = require('nedb');
+
+export class DingDictionary implements Dictionary {
+
+    db: any;
+
+    /** function to rendern an array of Entry */
+    entitiesMap: (word: string, entities: Entry[]) => string
+        = idMap;
+
+    constructor(dbPath: string) {
+        this.db = new Datastore({ filename: dbPath, autoload: true });
+    }
+
+    async query(word: string): Promise<string> {
+        let reg = new RegExp(escapeRegExp(word), 'i');        
+        if (word.length < 3) {
+            return new Promise((resolve, reject) => {
+                this.db.find({ title: word })
+                    //.limit(32)
+                    .exec((err: any, doc: any) => {
+                        if (err) {
+                            reject(err);
+                        } else {
+                            resolve(this.entitiesMap(word, doc));
+                        }
+                    });
+            });
+        } else {            
+            return new Promise((resolve, reject) => {
+                this.db.find({ text: { $regex: reg } })
+                    //.limit(32)
+                    .exec((err: any, doc: any) => {
+                        if (err) {
+                            reject(err);
+                        } else {
+                            resolve(this.entitiesMap(word, doc));
+                        }
+                    });
+            });
+        }
+    }
+
+
+    save(entry: Entry): Promise<any> {
+        return new Promise((resolve, reject) => {
+            this.db.insert(entry, (err: any, doc: any) => {
+                if (err) {
+                    reject(err);
+                } else {
+                    resolve(doc);
+                }
+            });
+        });
+    }
+
+
+    saveAll(entries: Entry[]): Promise<number> {
+        return new Promise((resolve, reject) => {
+            this.db.insert(entries, (err: any, doc: any) => {
+                if (err) {
+                    reject(err);
+                } else {
+                    resolve(entries.length);
+                }
+            });
+        });
+    }
+
+    close(): Promise<any> {
+        return new Promise((resolve, reject) => {
+            resolve(true);
+        });
+    }
+}
+
+/*public*/
+export function dingLineParser (word: string, entries: Entry[]): string  {
+    if(entries.length > 0) {
+        let dictCarts: PriorityDictCard[] =
+            entries.map((e: Entry, i: number) => parseDingLine(e.text, i))
+                .map((c: DictCard) => estimatePriority(c, word))
+                .sort((a: PriorityDictCard, b: PriorityDictCard) => b.priority - a.priority);
+        let pDictCard: string = dictCarts
+                .map((dc: PriorityDictCard) => dc.card)
+                .map((sc: DictCard) => formatDictCard(word, sc))
+                .join("\n\n");
+        pDictCard = `<table class="ding">${pDictCard}</table>`;
+        let family:Family[] = dictCarts[0].card.front.family;
+        //let firstWord:Vocabulary = dictCarts[0].card.front.family[0][0];
+        let firstWord:Vocabulary = family[0][0];
+        let pos = firstWord.partOfSpeech;
+        if (pos) {
+            let gender = pos.text;
+            if (Genus.includes(gender)) {
+                let deklination = dekliniere(firstWord.orthography.text, <NomenForm>gender) + "\n" ;
+                let secondWord = family[1][0];
+                //let secondWord = dictCarts[0].card.front.family[1][0];//dictCarts[1].card.front[0][0];
+                let pos2 = secondWord? secondWord.partOfSpeech : undefined;
+                if (pos2) {
+                    if (Genus.includes(pos2.text)){
+                        deklination += dekliniere(secondWord.orthography.text, <NomenForm>pos2.text);
+                    }
+                }
+                pDictCard = deklination + pDictCard;
+            }
+        }
+        return pDictCard;
+    }else {
+        return `<span class="ding ding-not-found">Kein Ergebnis für den Such nach ${word}</span>`;
+    }
+}
+
+
 /**
  * intended to be used only in [dictionary.ts], not subject of public use.
  * 
  * `export` is only for unit test.
  */
-
-export interface Genus {
+export interface Vocabulary {
     orthography    :Orthography;
     partOfSpeech   :PartOfSpeech|undefined;   // part in {}
     domain         :Domain[];                 // part in []
@@ -18,15 +133,31 @@ type _GenusPart = {
     position:number,
     text:string
 };
-export type Extension = _GenusPart;
-export type PartOfSpeech = _GenusPart;
-export type Domain = _GenusPart;
-export type Orthography = _GenusPart;
+//export type Extension = _GenusPart;
+export interface Extension {position:number; text:string;}
+//export type PartOfSpeech = _GenusPart;
+export interface PartOfSpeech {position:number; text:string;}
+//export type Domain = _GenusPart;
+export interface Domain {position:number; text:string;}
+//export type Orthography = _GenusPart;
+export interface Orthography {position:number; text:string;}
 
-
-export type Family = Genus[];
-export type Order = Family[];
-export type DictCard = [Order, Order];
+export type Family = Vocabulary[];
+//export type Order = Family[];
+export interface Order {
+    family: Family[];
+}
+//export type DictCard = [Order, Order];
+export interface DictCard {
+    front:Order; back: Order;
+}
+/*
+type PriorityDictCard = {
+    priority: number, // 0 to 100, 100 is most priority
+    card: DictCard
+};
+*/
+interface PriorityDictCard {priority: number; card: DictCard;}
 
 /*public*/
 /**
@@ -59,36 +190,20 @@ export async function parseDingDictionary(dingDictPath: string, insertEntry: (en
     return promisses;
 }
 
-type PriorityDictCard = {
-    priority: number, // 0 to 100, 100 is most priority
-    card: DictCard
-};
 
-export const dingLineParser = (word: string, entries: Entry[]): string => {
-    if(entries.length > 0) {
-        let pDictCard: string =
-            entries.map((e: Entry, i: number) => parseDingLine(e.text, i))
-                .map((c: DictCard) => estimatePriority(c, word))
-                .sort((a: PriorityDictCard, b: PriorityDictCard) => b.priority - a.priority)
-                .map((dc: PriorityDictCard) => dc.card)
-                .map((sc: DictCard) => formatDictCard(word, sc))
-                .join("\n\n");
-        return pDictCard;
-    }else {
-        return `<span class="ding ding-not-found">Kein Ergebnis für den Such nach ${word}</span>`;
-    }
-};
+
+
 
 function estimatePriority(card: DictCard, word: string): PriorityDictCard {
-    let origin: Order = card[0];
+    let origin: Order = card.front;
     let priority = -100; // lowest priority        
     let penalty = 0;
     const lowerWord = word.toLocaleLowerCase("de");
 
     // pull-up noun, sothat the {pl} form is show at top
-    function bonusPriority(genus:Genus, i:number): number {
+    function bonusPriority(genus:Vocabulary, i:number): number {
         if (isSingularNoun(genus)) {
-            const nextFamily = origin[i + 1];
+            const nextFamily = origin.family[i + 1];
             if (nextFamily) {
                 // pull-up noun, sothat the {pl} form is show at top
                 if (isPluralForm(nextFamily[0])) {
@@ -98,7 +213,7 @@ function estimatePriority(card: DictCard, word: string): PriorityDictCard {
         }
         return 0;
     }
-    for (let [i, family] of origin.entries()) {
+    for (let [i, family] of origin.family.entries()) {
         let isPrioritySet = false;
         for (let genus of family) {
             const orthography = genus.orthography.text;
@@ -160,7 +275,7 @@ function estimatePriority(card: DictCard, word: string): PriorityDictCard {
     return { priority, card };
 }
 
-function isSingularNoun(genus: Genus): boolean {
+function isSingularNoun(genus: Vocabulary): boolean {
     const gender = genus.partOfSpeech?.text;
     const singularForm = [
         "m", "n", "m/f", "m/n"
@@ -172,7 +287,7 @@ function isSingularNoun(genus: Genus): boolean {
     }
 }
 
-function isPluralForm(genus: Genus | undefined): boolean {
+function isPluralForm(genus: Vocabulary | undefined): boolean {
     if (genus) {
         const gender = genus.partOfSpeech?.text;
         if (gender) {
@@ -186,25 +301,24 @@ function isPluralForm(genus: Genus | undefined): boolean {
 }
 
 
-
-
-
-
-/*public*/
 export function parseDingLine(ding_line:string, lineCount=-1):DictCard {    
     let [word, translate] = ding_line.split('::');    
-    return [parseOrder(word), parseTranslate(translate)];
+    //return [parseOrder(word), parseTranslate(translate)];
+    return {
+        front: parseOrder(word),
+        back: parseTranslate(translate)
+    };
 }
 
 export function formatDictCard(word:string, c: DictCard): string {    
-    let h = c[0], 
-        t = c[1];    
-    let formatedTranslate: string[] = t.map( (f:Family) => {
-        return f.map( (g:Genus) => formatGenus(word, g) ).join("; ");
+    let front:Order = c.front, 
+        back:Order = c.back;    
+    let formatedTranslate: string[] = back.family.map( (f:Family) => {
+        return f.map( (g:Vocabulary) => formatGenus(word, g) ).join("; ");
     });        
     let result = "";
-    h.map( (f:Family) => {
-        return f.map( (g:Genus) => formatGenus(word, g) ).join("; ");
+    front.family.map( (f:Family) => {
+        return f.map( (g:Vocabulary) => formatGenus(word, g) ).join("; ");
     }).forEach( (head,idx) => {
         let translate = (idx < formatedTranslate.length) ? formatedTranslate[idx]: "";
         let cssc = `ding ding-row ding-row-${idx}`;
@@ -215,7 +329,7 @@ export function formatDictCard(word:string, c: DictCard): string {
 }
 
 
-export function formatGenus(word: string, g: Genus) {
+export function formatGenus(word: string, g: Vocabulary) {
     enum PartName  {
         ORTH = "orthography",
         POS = "partOfSpeech",
@@ -265,7 +379,8 @@ export function parseOrder(order:string): Order {
     for(let f of order.split(' | ')) {
         result.push(parseFamily(f));
     }
-    return result;
+    //return result;
+    return {family: result};
 }
 
 export function parseFamily(family:string): Family {
@@ -276,7 +391,7 @@ export function parseFamily(family:string): Family {
     return fam;
 }
 
-export function parseGenus(genus:string):Genus {
+export function parseGenus(genus:string):Vocabulary {
     let orthography:Orthography = {position:-1, text:""},
         part_of_speech:PartOfSpeech|undefined = undefined,
         domain: Domain[] = [] ,
@@ -360,7 +475,8 @@ export function parseTranslate(translate:string|undefined): Order {
         });
         f.push(ll);
     }
-    return f;
+    //return f;
+    return {family: f};
 }
 
 function escapeHtml(unsafe:string) {
@@ -371,3 +487,9 @@ function escapeHtml(unsafe:string) {
          .replace(/"/g, "&quot;")
          .replace(/'/g, "&#039;");
  }
+
+
+
+
+
+

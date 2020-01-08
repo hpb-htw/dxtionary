@@ -1,9 +1,9 @@
 import * as vscode from 'vscode';
 import * as path from 'path';
 import * as fs from 'fs';
-import { Dictionary, NeDBDictionary} from './dictionary';
+import { Dictionary } from './dictionary';
 import { constructDbPath, importDict} from './dictImporter';
-import { parseDingDictionary, dingLineParser } from './dingstructure';
+import { parseDingDictionary, dingLineParser, DingDictionary } from './dingstructure';
 
 
 
@@ -58,7 +58,8 @@ export function activate(context: vscode.ExtensionContext) {
 	const lookupHandler = async (word: string) => {
 		if(word && word.length > 0) {
 			try{
-				let entry = await lookup(word, context);				
+				let entry = await lookup(word, context);
+				console.log(entry);
 				showEntry(word, entry, context);
 			}catch(ex) {
 				console.log(ex);//log exception
@@ -162,8 +163,9 @@ function render(word: string, lookupResult: string):string {
 	<body>
 		<h1>Suche nach: ${word}</h1>
 		<div>
-		<table class="ding">${lookupResult}
-		</table></div>
+		${lookupResult}
+		
+		</div>
 	</body>
 	</html>	
 	`;
@@ -202,7 +204,7 @@ function _extractBuiltinDicts(dingDictPath:string, dbFile:string){
 	}catch(ex) {
 		// ignore it
 	}
-	let dict = new NeDBDictionary(dbFile);
+	let dict = new DingDictionary(dbFile);
 	return importDict(dingDictPath, parseDingDictionary, dict)
 		.then( (line)=> {
 			let msg = `Extract ${line} entry finished`;
@@ -231,7 +233,7 @@ function showMsgWhenDictNotExist() {
 }
 
 function createDictionary():Dictionary {
-	let dict = new NeDBDictionary(dbFile);
+	let dict = new DingDictionary(dbFile);
 	dict.entitiesMap = dingLineParser;
 	return dict;
 }

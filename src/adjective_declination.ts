@@ -27,6 +27,7 @@ const plural = {
 };
 
 export type NomenForm = "m"|"f"|"n"|"pl";
+export const Genus:string[] = ["m", "f", "n", "pl"];
 
 export function dekliniere(nomen:string, nomenForm:NomenForm, genitiv:string|undefined=undefined) {
     let tab:any;

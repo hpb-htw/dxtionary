@@ -1,8 +1,8 @@
 import * as assert from "assert";
 import * as fs from "fs";
 
-import { Entry, NeDBDictionary} from "../dictionary";
-import { dingLineParser } from "../dingstructure";
+import { Entry } from "../dictionary";
+import { dingLineParser, DingDictionary } from "../dingstructure";
 
 const globalDbPath = "/tmp/somepath.db";
 const entries: Entry[] = [
@@ -33,7 +33,7 @@ suite('NeDBDictionary', () => {
     });
 
     test('query a word', async () => {
-        let dict = new NeDBDictionary(globalDbPath);
+        let dict = new DingDictionary(globalDbPath);
         await dict.saveAll(entries);
         let word = "TeSt"; // keep this word mix lower and UPPER case to test query
         let result = await dict.query(word);
@@ -43,12 +43,12 @@ suite('NeDBDictionary', () => {
     });
 
     test('persistent entries', async () => {
-        let dict = new NeDBDictionary(globalDbPath);
+        let dict = new DingDictionary(globalDbPath);
         let count = await dict.saveAll(entries);
         await dict.close();
         assert.equal(count, entries.length);
         // now open again, dictionary must contain entries
-        let reopenDict = new NeDBDictionary(globalDbPath);
+        let reopenDict = new DingDictionary(globalDbPath);
         let helloEntry = await reopenDict.query('hello');
         assert.equal(helloEntry, "hello\nhello");
         let testEntry = await reopenDict.query('test');
@@ -56,7 +56,7 @@ suite('NeDBDictionary', () => {
     });
 
     test('persistent single entry', async () => {
-        let dict = new NeDBDictionary(globalDbPath);
+        let dict = new DingDictionary(globalDbPath);
         let bigEntries: Entry[] = [];
         for (let i = 0; i < 100_000; ++i) {
             bigEntries.push({
@@ -107,7 +107,7 @@ suite('NeDBDictionary', () => {
                 text: 'Winter {m}; Winterzeit {f} :: wintertime; wintertide'
             }
         ];
-        let dict = new NeDBDictionary(globalDbPath);
+        let dict = new DingDictionary(globalDbPath);
         dict.entitiesMap = dingLineParser;
         await dict.saveAll(dummyData);
         let result = await dict.query('Winter');
@@ -116,7 +116,7 @@ suite('NeDBDictionary', () => {
 
     test('big query', async () => {
         const dummyFile = '/home/hbui/.config/Code/User/globalStorage/hpb-htw.dxtionary/ding-de-en-dev.txt.db';
-        let dict = new NeDBDictionary(dummyFile);
+        let dict = new DingDictionary(dummyFile);
         dict.entitiesMap = dingLineParser;
         let result = await dict.query('ding');
         console.log(result);

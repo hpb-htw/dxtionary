@@ -1,5 +1,5 @@
 import * as assert from "assert";
-import { parseDingLine, parseOrder, parseGenus, Genus, parseFamily, Family, Order, formatGenus, DictCard, formatDictCard, parseTranslate }
+import { parseDingLine, parseOrder, parseGenus, Vocabulary, parseFamily, Family, Order, formatGenus, DictCard, formatDictCard, parseTranslate }
     from "../dingstructure";
 
 import * as util from 'util';
@@ -13,7 +13,7 @@ const _toTrace = (what: any, depth: number) =>
         depth: (depth <= 0) ? null : depth
     });
 
-const TEST_ORDER: Order = [
+const TEST_ORDER: Family[] = [
     [
         {
             orthography: { position: 0, text: 'auf etw. / einer Sache  folgen' },
@@ -129,7 +129,7 @@ const TEST_ORDER: Order = [
 
 suite('dingstructure', () => {
 
-    function assertGenusEqual(f: Genus, expected: Genus, msg = "") {
+    function assertGenusEqual(f: Vocabulary, expected: Vocabulary, msg = "") {
         let parentMsg = msg.length > 0 ? `${msg} ` : '';
         assert.deepEqual(f, expected, parentMsg);
     }
@@ -225,15 +225,15 @@ suite('dingstructure', () => {
     });
 
     function assertOrderEqual(o: Order, e: Order) {
-        for (let i = 0; i < o.length; ++i) {
-            let fo = o[i], fe = e[i];
+        for (let i = 0; i < o.family.length; ++i) {
+            let fo = o.family[i], fe = e.family[i];
             assertFamilyEqual(fo, fe, `Expect family[${i}] equal to ${_toTrace(fe, 3)}`);
         }
     }
 
     test('parse order', () => {
         const l = "mauken; wintern {vi} | maukend; winternd | gemaukt; gewintert";
-        const e: Order = [
+        const e: Family[] = [
             [
                 {
                     orthography: { position: 0, text: 'mauken' },
@@ -278,7 +278,7 @@ suite('dingstructure', () => {
             ]
         ];
         const o = parseOrder(l);
-        assertOrderEqual(o, e);
+        assertOrderEqual(o, {family:e} );
     });
 
     test('parse long order', () => {
@@ -293,11 +293,11 @@ suite('dingstructure', () => {
             'Darauf folgt ein sechsmonatiges Praktikum.'];
         const l = ml.join(' | ');
         const order = parseOrder(l);
-        assertOrderEqual(order, TEST_ORDER);
+        assertOrderEqual(order, {family:TEST_ORDER});
     });
 
     test('format genus', () => {
-        let g: Genus = {
+        let g: Vocabulary = {
             orthography: { text: "Räumfahrzeug", position: 0 },
             partOfSpeech: { text: "n", position: 13 },
             domain: [{ text: "auto", position: 32 }],
@@ -310,7 +310,7 @@ suite('dingstructure', () => {
     });
 
     test('format order', () => {
-        let de: Order = TEST_ORDER;
+        let de: Order = {family:TEST_ORDER};
         let enText = [
             'to follow sth. (of a thing that comes after in time or place)',
             'following',
@@ -323,7 +323,7 @@ suite('dingstructure', () => {
             'This is followed by a six-month traineeship.'
         ].join(' | ');
         let en: Order = parseTranslate(enText);
-        let card: DictCard = [de, en];
+        let card: DictCard = {front:de, back:en};
         let f = formatDictCard("Folgen",card);
         //console.log(f);
     });
