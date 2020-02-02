@@ -55,7 +55,7 @@ export function activate(context: vscode.ExtensionContext) {
 
 	showEntry("::", INIT_TEXT, context);
 
-	// every lookup can use this command to perform lookup.
+	// every lookup can use command ${LOOKUP_CMD} to perform lookup.
 	const lookupHandler = async (word: string) => {
 		if(word && word.length > 0) {
 			try{
@@ -66,7 +66,7 @@ export function activate(context: vscode.ExtensionContext) {
 				vscode.window.showInformationMessage(`something goes wrong as lookup ${word}`);
 			}
 		}else {
-			vscode.window.showInformationMessage(webviewDictPanelReady ? "Kein Wort zum Nachschlagen" : "Wörterbuch ist initialisiert");
+			vscode.window.showInformationMessage(webviewDictPanelReady ? "Wörterbuch ist initialisiert": "Kein Wort zum Nachschlagen" );
 		}
 	};
 	context.subscriptions.push(vscode.commands.registerCommand(LOOKUP_CMD, lookupHandler));
@@ -74,7 +74,7 @@ export function activate(context: vscode.ExtensionContext) {
 
 	// User can trigger dictionary lookup
 	const lookupUIHandler = async () => {
-		let word = await vscode.window.showInputBox({ placeHolder: 'type your looking word' });
+		let word = await vscode.window.showInputBox({ placeHolder: 'type your looking word up' });
 		const args = normalizedArg(word);
 		vscode.commands.executeCommand(LOOKUP_CMD, ...args)
 			.then(done => {
