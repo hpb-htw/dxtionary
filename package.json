@@ -14,7 +14,12 @@
 	"categories": [
 		"Other"
 	],
-	"keywords": ["dictionary", "German", "Deutsch", "Ding"],
+	"keywords": [
+		"dictionary",
+		"German",
+		"Deutsch",
+		"Ding"
+	],
 	"activationEvents": [
 		"onCommand:dxtionary.lookup",
 		"onCommand:dxtionary.lookup.ui",
